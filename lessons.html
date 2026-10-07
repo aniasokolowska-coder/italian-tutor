@@ -98,6 +98,20 @@
   }
   .chip:hover { background: #2c3566; }
   .chip .speaker { font-size: 0.8rem; opacity: 0.7; }
+  .chip .chip-en { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
+  .practice-list { line-height: 1.7; }
+  .practice-list li { margin-bottom: 8px; }
+  .dialogue { display: flex; flex-direction: column; gap: 10px; }
+  .dialogue-line { display: flex; gap: 10px; align-items: flex-start; }
+  .dialogue-play {
+    flex-shrink: 0;
+    background: var(--panel-2);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  .dialogue-it { font-weight: 600; }
+  .dialogue-en { color: var(--muted); font-size: 0.88rem; margin-top: 2px; }
   .culture {
     background: rgba(108,140,255,0.1);
     border-left: 3px solid var(--accent);
@@ -232,563 +246,13 @@
   <footer>Progress is saved in your browser only.</footer>
 </div>
 
+<script src="lessons-data.js"></script>
 <script>
 (function () {
   "use strict";
 
-  var BEGINNER = [
-    {
-      id: "overview",
-      tab: "Overview",
-      title: "Course Overview",
-      html: [
-        "<p>A structured 8-week plan for a complete beginner learning Italian, written in English. Each week builds on the previous one.</p>",
-        "<div class='overview-grid'>",
-        "<div class='section'><h3>Details</h3><ul>",
-        "<li><b>Level:</b> CEFR A1 (absolute beginner)</li>",
-        "<li><b>Duration:</b> 8 weeks, 3 sessions/week (30–45 min)</li>",
-        "<li><b>Goal:</b> Hold a simple conversation, order food, ask directions.</li>",
-        "<li><b>Method:</b> Short, frequent sessions with lots of speaking out loud.</li>",
-        "</ul></div>",
-        "<div class='section'><h3>Each session</h3><ul>",
-        "<li><b>Warm-up (5 min):</b> Review the previous lesson out loud.</li>",
-        "<li><b>New material (15 min):</b> Vocabulary + one grammar point.</li>",
-        "<li><b>Practice (15 min):</b> Speak, write, or role-play.</li>",
-        "<li><b>Cool-down (5 min):</b> Say what you learned without notes.</li>",
-        "</ul></div>",
-        "</div>",
-        "<div class='section'><h3>Weekly rhythm</h3><table>",
-        "<tr><th>Day</th><th>Focus</th></tr>",
-        "<tr><td>Monday</td><td>New vocabulary + grammar</td></tr>",
-        "<tr><td>Wednesday</td><td>Speaking and role-play</td></tr>",
-        "<tr><td>Friday</td><td>Review + listening practice</td></tr>",
-        "</table></div>"
-      ].join("")
-    },
-    {
-      id: "week1",
-      tab: "Week 1",
-      title: "Week 1 — Greetings and Introductions",
-      vocab: ["ciao", "buongiorno", "buonasera", "arrivederci", "per favore", "grazie", "prego", "sì", "no", "come stai?"],
-      grammar: [
-        "Subject pronouns: <b>io, tu, lui/lei, noi, voi, loro</b>",
-        "The verb <b>essere</b> (to be): sono, sei, è, siamo, siete, sono",
-        "The verb <b>chiamarsi</b> (to be called): mi chiamo, ti chiami…"
-      ],
-      practice: [
-        "Introduce yourself: \u201cCiao, mi chiamo ___. Sono ___.\u201d",
-        "Ask and answer: \u201cCome ti chiami?\u201d / \u201cCome stai?\u201d"
-      ],
-      culture: "Italians often use <i>ciao</i> for both hello and goodbye, but only with friends and family. Use <i>buongiorno</i> in formal settings.",
-      checklist: ["I can say hello and goodbye.", "I can introduce myself by name.", "I can ask someone their name and how they are."]
-    },
-    {
-      id: "week2",
-      tab: "Week 2",
-      title: "Week 2 — Numbers, Dates, and the Alphabet",
-      vocab: ["uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci", "venti", "cento", "lunedì", "gennaio"],
-      grammar: [
-        "The verb <b>avere</b> (to have): ho, hai, ha, abbiamo, avete, hanno",
-        "Asking age: \u201cQuanti anni hai?\u201d — \u201cHo ___ anni.\u201d"
-      ],
-      practice: [
-        "Count to 100 out loud.",
-        "Say your birthday: \u201cIl mio compleanno è il ___.\u201d",
-        "Spell your name using the Italian alphabet."
-      ],
-      culture: "The Italian alphabet has 21 letters; foreign letters (j, k, w, x, y) appear only in loanwords.",
-      checklist: ["I can count to 100.", "I can say my age and birthday.", "I know the days and months."]
-    },
-    {
-      id: "week3",
-      tab: "Week 3",
-      title: "Week 3 — People, Family, and Articles",
-      vocab: ["la famiglia", "la madre", "il padre", "il fratello", "la sorella", "il figlio", "la figlia", "il nonno", "la nonna", "l'amico", "l'amica"],
-      grammar: [
-        "Definite articles: <b>il, lo, la, l', i, gli, le</b>",
-        "Indefinite articles: <b>un, uno, una, un'</b>",
-        "Noun gender (masculine/feminine) and number (singular/plural)"
-      ],
-      practice: [
-        "Describe your family: \u201cHo un fratello e due sorelle.\u201d",
-        "Match the correct article to new nouns."
-      ],
-      culture: "Family is central to Italian culture; <i>la mamma</i> and <i>il papà</i> are common even for adults.",
-      checklist: ["I can name family members.", "I can use the correct article.", "I can describe my family in a sentence."]
-    },
-    {
-      id: "week4",
-      tab: "Week 4",
-      title: "Week 4 — Everyday Objects and Regular Verbs",
-      vocab: ["la casa", "la cucina", "il libro", "il telefono", "la chiave", "la borsa", "l'acqua", "il pane", "il caffè"],
-      grammar: [
-        "Present tense of <b>-are</b> verbs: parlare → parlo, parli, parla, parliamo, parlate, parlano",
-        "Negation with <b>non</b>: \u201cNon parlo italiano.\u201d"
-      ],
-      practice: [
-        "Describe what is in your bag.",
-        "Make 5 negative sentences about yourself."
-      ],
-      culture: "Coffee culture — ordering \u201cun caffè\u201d gets you an espresso by default.",
-      checklist: ["I can name everyday objects.", "I can conjugate a regular -are verb.", "I can make negative sentences."]
-    },
-    {
-      id: "week5",
-      tab: "Week 5",
-      title: "Week 5 — Food and Ordering",
-      vocab: ["il ristorante", "il menù", "il conto", "l'antipasto", "il primo", "il secondo", "il dolce", "il vino", "la pizza", "il gelato"],
-      grammar: [
-        "Polite requests with <b>vorrei</b> (I would like)",
-        "The verb <b>prendere</b> (to take/have): prendo, prendi, prende…"
-      ],
-      practice: [
-        "Role-play ordering at a restaurant.",
-        "Read a simple menu and ask for the bill: \u201cIl conto, per favore.\u201d"
-      ],
-      culture: "A full Italian meal has multiple courses; it is normal to linger over coffee after eating.",
-      checklist: ["I can order food and drinks.", "I can ask for the bill.", "I know the course names on a menu."]
-    },
-    {
-      id: "week6",
-      tab: "Week 6",
-      title: "Week 6 — Directions and the City",
-      vocab: ["la strada", "la piazza", "la stazione", "a destra", "a sinistra", "dritto", "vicino", "lontano", "dove?"],
-      grammar: [
-        "The verb <b>andare</b> (to go): vado, vai, va, andiamo, andate, vanno",
-        "Prepositions of place: a, in, su, sotto, accanto a"
-      ],
-      practice: [
-        "Ask for directions: \u201cScusi, dov'è la stazione?\u201d",
-        "Give simple directions using a map."
-      ],
-      culture: "Italian cities often have a central <i>piazza</i> that serves as a meeting point.",
-      checklist: ["I can ask for directions.", "I can understand left, right, straight.", "I can name places in a city."]
-    },
-    {
-      id: "week7",
-      tab: "Week 7",
-      title: "Week 7 — Daily Routine and Time",
-      vocab: ["la mattina", "il pomeriggio", "la sera", "la notte", "svegliarsi", "mangiare", "lavorare", "dormire"],
-      grammar: [
-        "Reflexive verbs: mi sveglio, ti svegli, si sveglia…",
-        "Telling time: \u201cSono le tre.\u201d / \u201cÈ l'una.\u201d"
-      ],
-      practice: [
-        "Describe your day from morning to night.",
-        "Ask and answer: \u201cA che ora…?\u201d"
-      ],
-      culture: "Many shops close in the early afternoon for <i>la pausa</i> (riposo).",
-      checklist: ["I can describe my daily routine.", "I can tell the time.", "I can use reflexive verbs."]
-    },
-    {
-      id: "week8",
-      tab: "Week 8",
-      title: "Week 8 — Review and Conversation",
-      vocab: ["e", "ma", "perché", "quindi", "ho mangiato", "sono andato", "sono andata"],
-      grammar: [
-        "Passato prossimo (intro): \u201cHo mangiato\u201d, \u201cSono andato/a\u201d",
-        "Connecting ideas: e, ma, perché, quindi"
-      ],
-      practice: [
-        "Hold a 3–5 minute conversation combining all topics.",
-        "Write a short paragraph about yourself in Italian."
-      ],
-      culture: "Regional differences are strong; greetings and food names change from north to south.",
-      checklist: ["I can talk about the past.", "I can connect ideas.", "I can hold a short conversation."]
-    }
-  ];
-
-  var INTERMEDIATE = [
-    {
-      id: "int-overview",
-      tab: "Overview",
-      title: "Intermediate Course — B1",
-      html: [
-        "<p>An 8-week B1 course for learners who can already handle everyday conversation. The focus shifts from basic phrases to expressing opinions, telling stories, and handling real-life situations with confidence.</p>",
-        "<div class='overview-grid'>",
-        "<div class='section'><h3>Details</h3><ul>",
-        "<li><b>Level:</b> CEFR B1 (intermediate)</li>",
-        "<li><b>Duration:</b> 8 weeks, 3 sessions/week (45–60 min)</li>",
-        "<li><b>Goal:</b> Discuss news, tell stories in the past, express opinions and plans.</li>",
-        "<li><b>Method:</b> Immersion: read and listen to authentic Italian, then produce your own.</li>",
-        "</ul></div>",
-        "<div class='section'><h3>Each session</h3><ul>",
-        "<li><b>Warm-up (5 min):</b> Summarize yesterday in Italian.</li>",
-        "<li><b>New material (20 min):</b> Grammar + vocabulary in context.</li>",
-        "<li><b>Practice (25 min):</b> Debate, role-play, or write a paragraph.</li>",
-        "<li><b>Cool-down (5 min):</b> Record yourself speaking for 1 minute.</li>",
-        "</ul></div>",
-        "</div>",
-        "<div class='section'><h3>Weekly rhythm</h3><table>",
-        "<tr><th>Day</th><th>Focus</th></tr>",
-        "<tr><td>Monday</td><td>Grammar + reading</td></tr>",
-        "<tr><td>Wednesday</td><td>Listening + speaking</td></tr>",
-        "<tr><td>Friday</td><td>Writing + review</td></tr>",
-        "</table></div>"
-      ].join("")
-    },
-    {
-      id: "int-week1",
-      tab: "Week 1",
-      title: "Week 1 — The Passato Prossimo in Depth",
-      vocab: ["ieri", "l'altro giorno", "la settimana scorsa", "già", "ancora", "mai", "appena", "finalmente"],
-      grammar: [
-        "Choosing <b>avere</b> vs <b>essere</b> as auxiliary: transitive verbs take <i>avere</i>; movement/reflexive verbs take <i>essere</i>.",
-        "Agreement of the participle with <i>essere</i>: <i>sono andato / andata</i>; and with direct object pronouns: <i>l'ho vista</i>.",
-        "Time markers: già, appena, non… ancora, mai — <i>Non ho mai visto Venezia.</i>"
-      ],
-      practice: [
-        "Tell what you did last weekend using at least 6 different verbs.",
-        "Transform present-tense sentences into the passato prossimo."
-      ],
-      culture: "In the south, the passato prossimo often replaces the passato remoto even for distant events — regional usage varies.",
-      checklist: ["I can choose the right auxiliary.", "I can make the participle agree.", "I can use time markers correctly."],
-      exercises: [
-        { q: "Translate: <i>I went to Rome yesterday.</i>", a: "Sono andato/a a Roma ieri." },
-        { q: "Translate: <i>We have already eaten.</i>", a: "Abbiamo già mangiato." },
-        { q: "Translate: <i>I have never been to Sicily.</i>", a: "Non sono mai stato/a in Sicilia." }
-      ]
-    },
-    {
-      id: "int-week2",
-      tab: "Week 2",
-      title: "Week 2 — The Imperfetto and Storytelling",
-      vocab: ["mentre", "quando", "all'improvviso", "di solito", "da bambino", "ogni giorno", "una volta"],
-      grammar: [
-        "The <b>imperfetto</b> for description and habit: parlavo, parlavi, parlava, parlavamo, parlavate, parlavano.",
-        "Passato prossimo vs imperfetto: background vs completed action — <i>Mentre leggevo, è squillato il telefono.</i>",
-        "Irregular imperfetto: essere → ero, fare → facevo, dire → dicevo, bere → bevevo."
-      ],
-      practice: [
-        "Write a 120-word story about a memorable day, mixing both past tenses.",
-        "Describe your childhood habits using <i>di solito</i> and <i>da bambino</i>."
-      ],
-      culture: "Italian storytelling often opens with <i>C'era una volta…</i> (once upon a time).",
-      checklist: ["I can form the imperfetto.", "I can contrast the two past tenses.", "I can tell a short story."],
-      exercises: [
-        { q: "Fill in: <i>Mentre ___ (io/leggere), ___ (lui/telefonare).</i>", a: "leggevo … ha telefonato" },
-        { q: "Translate: <i>When I was a child, I played football every day.</i>", a: "Da bambino giocavo a calcio ogni giorno." }
-      ]
-    },
-    {
-      id: "int-week3",
-      tab: "Week 3",
-      title: "Week 3 — Future, Conditional, and Hypotheses",
-      vocab: ["forse", "probabilmente", "volentieri", "se fossi", "piuttosto", "in ogni caso"],
-      grammar: [
-        "Simple future: parlerò, sarai, avrà… Irregulars: sarò, avrò, andrò, farò, verrò.",
-        "Conditional for politeness and desire: vorrei, potresti, dovrei, mi piacerebbe.",
-        "First conditional: <i>Se piove, resto a casa.</i> Second conditional: <i>Se avessi tempo, viaggerei.</i>"
-      ],
-      practice: [
-        "Make 5 polite requests using the conditional.",
-        "Describe your plans for next year with the future tense."
-      ],
-      culture: "Italians often soften requests with the conditional — <i>Potresti…?</i> is far more natural than the imperative.",
-      checklist: ["I can form the future.", "I can use the conditional for politeness.", "I can build conditional sentences."],
-      exercises: [
-        { q: "Translate: <i>I would like a coffee, please.</i>", a: "Vorrei un caffè, per favore." },
-        { q: "Translate: <i>If I had money, I would travel.</i>", a: "Se avessi soldi, viaggerei." }
-      ]
-    },
-    {
-      id: "int-week4",
-      tab: "Week 4",
-      title: "Week 4 — Pronouns and Combined Pronouns",
-      vocab: ["me lo", "te la", "glielo", "ce ne", "ci", "ne", "vi"],
-      grammar: [
-        "Direct and indirect object pronouns: lo, la, li, le / mi, ti, gli, le, ci, vi.",
-        "Combined pronouns: <i>me lo dai</i>, <i>te la mando</i>, <i>glielo dico</i>.",
-        "The partitive <b>ne</b>: <i>Ne vuoi un po'? — Ne prendo due.</i>"
-      ],
-      practice: [
-        "Rewrite 8 sentences replacing objects with pronouns.",
-        "Dialogue: offer something and respond using <i>ne</i>."
-      ],
-      culture: "Mastering combined pronouns is the single biggest leap from B1 to B2.",
-      checklist: ["I can use direct and indirect pronouns.", "I can combine two pronouns.", "I can use the partitive ne."],
-      exercises: [
-        { q: "Replace: <i>Do the book to Marco.</i>", a: "Glielo do." },
-        { q: "Replace: <i>Do you want some water?</i> → <i>Yes, I want some.</i>", a: "Ne vuoi? — Sì, ne voglio." }
-      ]
-    },
-    {
-      id: "int-week5",
-      tab: "Week 5",
-      title: "Week 5 — Subjunctive (Congiuntivo) Introduction",
-      vocab: ["penso che", "credo che", "spero che", "benchè", "affinché", "prima che"],
-      grammar: [
-        "Present subjunctive after expressions of opinion, doubt, emotion: <i>Penso che sia giusto.</i>",
-        "Forms: parlare → che io parli; essere → che io sia; avere → che io abbia.",
-        "Triggers: penso/credo/spero che, è importante che, benché, prima che."
-      ],
-      practice: [
-        "Give 6 opinions using <i>penso che</i> + subjunctive.",
-        "Express hopes and doubts about the future."
-      ],
-      culture: "The congiuntivo is a marker of educated speech; using it well noticeably raises perceived fluency.",
-      checklist: ["I can form the present subjunctive.", "I know common triggers.", "I can express opinions correctly."],
-      exercises: [
-        { q: "Complete: <i>Penso che tu ___ (avere) ragione.</i>", a: "abbia" },
-        { q: "Complete: <i>Spero che loro ___ (arrivare) presto.</i>", a: "arrivino" }
-      ]
-    },
-    {
-      id: "int-week6",
-      tab: "Week 6",
-      title: "Week 6 — Work, Opinions, and Debate",
-      vocab: ["secondo me", "d'altra parte", "tuttavia", "in effetti", "sono d'accordo", "non condivido"],
-      grammar: [
-        "Expressing agreement and disagreement politely.",
-        "Connectors of contrast: però, tuttavia, invece, d'altra parte, mentre.",
-        "The impersonal <b>si</b>: <i>Si dice che…</i>, <i>In Italia si lavora molto.</i>"
-      ],
-      practice: [
-        "Debate a simple topic (smartphones at school) using connectors.",
-        "Write a short opinion paragraph (100 words)."
-      ],
-      culture: "Coffee-break debate is a national pastime; disagreeing is often done with warmth, not confrontation.",
-      checklist: ["I can express and defend an opinion.", "I can use contrast connectors.", "I can use the impersonal si."],
-      exercises: [
-        { q: "Translate: <i>I don't agree, however I understand your point.</i>", a: "Non sono d'accordo, tuttavia capisco il tuo punto." }
-      ]
-    },
-    {
-      id: "int-week7",
-      tab: "Week 7",
-      title: "Week 7 — Reading and Analyzing News",
-      vocab: ["il titolo", "la notizia", "secondo la fonte", "l'articolo", "il dibattito", "in sintesi"],
-      grammar: [
-        "Passive voice: <i>La legge è stata approvata.</i>",
-        "Reported speech (basic): <i>Ha detto che sarebbe arrivato.</i>",
-        "Nominalization common in journalism: <i>l'aumento dei prezzi</i>."
-      ],
-      practice: [
-        "Summarize an Italian news article in 5 sentences.",
-        "Explain a headline in your own words."
-      ],
-      culture: "Italian newspapers range from <i>la Repubblica</i> (centre-left) to <i>il Corriere della Sera</i> (centrist) and <i>il Giornale</i> (centre-right).",
-      checklist: ["I can use the passive voice.", "I can report what someone said.", "I can summarize an article."],
-      exercises: [
-        { q: "Translate: <i>The law was approved yesterday.</i>", a: "La legge è stata approvata ieri." }
-      ]
-    },
-    {
-      id: "int-week8",
-      tab: "Week 8",
-      title: "Week 8 — Consolidation and Fluency",
-      vocab: ["insomma", "comunque", "a proposito", "dopotutto", "in fin dei conti"],
-      grammar: [
-        "Review: passato prossimo, imperfetto, futuro, condizionale, congiuntivo.",
-        "Discourse markers for natural flow: insomma, comunque, a proposito, dopotutto.",
-        "Idiomatic expressions: <i>in bocca al lupo</i>, <i>non vedo l'ora</i>, <i>costa un occhio della testa</i>."
-      ],
-      practice: [
-        "Hold a 10-minute conversation on any topic without switching to English.",
-        "Write a 200-word opinion essay with an introduction and conclusion."
-      ],
-      culture: "<i>In bocca al lupo!</i> is the standard way to wish good luck; reply <i>crepi il lupo!</i>",
-      checklist: ["I can speak for 10 minutes.", "I can write a structured essay.", "I use idiomatic expressions naturally."],
-      exercises: [
-        { q: "What do you reply to <i>In bocca al lupo</i>?", a: "Crepi (il lupo)!" }
-      ]
-    }
-  ];
-
-  var ADVANCED = [
-    {
-      id: "adv-overview",
-      tab: "Overview",
-      title: "Advanced Course — C1",
-      html: [
-        "<p>An 8-week C1 course for learners aiming at near-native fluency. The focus is on nuance, register, literary and journalistic Italian, and mastering the subjunctive and complex syntax.</p>",
-        "<div class='overview-grid'>",
-        "<div class='section'><h3>Details</h3><ul>",
-        "<li><b>Level:</b> CEFR C1 (advanced)</li>",
-        "<li><b>Duration:</b> 8 weeks, 3 sessions/week (60 min)</li>",
-        "<li><b>Goal:</b> Argue complex ideas, understand literature and fast speech, write formally.</li>",
-        "<li><b>Method:</b> Authentic texts, podcasts, and literature with active analysis.</li>",
-        "</ul></div>",
-        "<div class='section'><h3>Each session</h3><ul>",
-        "<li><b>Warm-up (5 min):</b> Discuss a news headline in depth.</li>",
-        "<li><b>Study (25 min):</b> Advanced grammar and register.</li>",
-        "<li><b>Production (25 min):</b> Essay, presentation, or debate.</li>",
-        "<li><b>Cool-down (5 min):</b> Self-correct a recording of your speech.</li>",
-        "</ul></div>",
-        "</div>",
-        "<div class='section'><h3>Weekly rhythm</h3><table>",
-        "<tr><th>Day</th><th>Focus</th></tr>",
-        "<tr><td>Monday</td><td>Complex grammar + literature</td></tr>",
-        "<tr><td>Wednesday</td><td>Debate + register</td></tr>",
-        "<tr><td>Friday</td><td>Formal writing + editing</td></tr>",
-        "</table></div>"
-      ].join("")
-    },
-    {
-      id: "adv-week1",
-      tab: "Week 1",
-      title: "Week 1 — All Subjunctive Tenses",
-      vocab: ["quantunque", "purché", "a patto che", "nonostante", "per quanto", "ammesso che"],
-      grammar: [
-        "Present, imperfect, past, and pluperfect subjunctive: che io parli / che io parlassi / che io abbia parlato / che io avessi parlato.",
-        "Sequence of tenses: <i>Penso che sia</i> (present) vs <i>Pensavo che fosse</i> (past).",
-        "Concessive and conditional conjunctions: benché, quantunque, purché, a patto che, ammesso che."
-      ],
-      practice: [
-        "Rewrite 10 sentences requiring the subjunctive.",
-        "Express complex hypotheses about past events."
-      ],
-      culture: "The congiuntivo is fully alive in careful writing and speech; dropping it can sound uneducated in formal contexts.",
-      checklist: ["I can use all four subjunctive tenses.", "I apply the sequence of tenses.", "I use concessive conjunctions."],
-      exercises: [
-        { q: "Complete: <i>Nonostante ___ (piovere), siamo usciti.</i>", a: "piovesse" },
-        { q: "Complete: <i>Pensavo che tu ___ (avere) già finito.</i>", a: "avessi" }
-      ]
-    },
-    {
-      id: "adv-week2",
-      tab: "Week 2",
-      title: "Week 2 — Passive, Impersonal, and Si Passivante",
-      vocab: ["viene pubblicato", "si ritiene", "si è deciso", "viene considerato"],
-      grammar: [
-        "Passive with essere and venire: <i>Il libro è stato / viene letto.</i>",
-        "Si passivante: <i>Si vendono case.</i> / <i>Si è discusso a lungo.</i>",
-        "Impersonal si with reflexive verbs: <i>Ci si sveglia presto.</i>"
-      ],
-      practice: [
-        "Convert 10 active sentences to passive and impersonal forms.",
-        "Describe social phenomena using si passivante."
-      ],
-      culture: "The si passivante is everywhere in signage and news — mastering it is essential for reading real Italian.",
-      checklist: ["I can use both passive forms.", "I can use si passivante.", "I can handle impersonal reflexives."],
-      exercises: [
-        { q: "Make impersonal: <i>People sell houses here.</i>", a: "Qui si vendono case." }
-      ]
-    },
-    {
-      id: "adv-week3",
-      tab: "Week 3",
-      title: "Week 3 — Relative Clauses and Nominalization",
-      vocab: ["il quale", "la quale", "colui che", "chiunque", "ciò che", "quanto"],
-      grammar: [
-        "Relative pronouns: che, cui, il quale, chi, ciò che, quanto.",
-        "Preposition + cui: <i>la persona a cui ho parlato</i>.",
-        "Nominalization for formal style: <i>l'approvazione della legge</i> instead of <i>quando la legge è stata approvata</i>."
-      ],
-      practice: [
-        "Combine pairs of sentences using relative clauses.",
-        "Rewrite informal sentences in formal, nominalized style."
-      ],
-      culture: "Formal Italian favors complex subordinate clauses; this is a hallmark of C1 writing.",
-      checklist: ["I can use all relative pronouns.", "I can build cui-constructions.", "I can nominalize for register."],
-      exercises: [
-        { q: "Combine: <i>Ho incontrato un uomo. L'uomo era italiano.</i>", a: "Ho incontrato un uomo che era italiano." }
-      ]
-    },
-    {
-      id: "adv-week4",
-      tab: "Week 4",
-      title: "Week 4 — Idioms, Proverbs, and Colloquialisms",
-      vocab: ["in bocca al lupo", "non vedo l'ora", "costa un occhio", "prendere in giro", "fare il furbo", "andare a ruba", "avere le mani in pasta"],
-      grammar: [
-        "Idiomatic verb phrases and their register (neutral vs colloquial).",
-        "Fixed expressions that resist literal translation.",
-        "Diminutives and augmentatives: -ino, -etto, -one, -accio — <i>un caffettino</i>, <i>un librone</i>."
-      ],
-      practice: [
-        "Use 10 idioms in original sentences.",
-        "Explain 5 Italian proverbs to a foreign friend."
-      ],
-      culture: "Proverbs remain common in family speech — <i>Chi va piano va sano e va lontano.</i>",
-      checklist: ["I understand common idioms.", "I can use them naturally.", "I know diminutive/augmentative forms."],
-      exercises: [
-        { q: "What does <i>costa un occhio della testa</i> mean?", a: "It costs an arm and a leg (very expensive)." }
-      ]
-    },
-    {
-      id: "adv-week5",
-      tab: "Week 5",
-      title: "Week 5 — Literary Italian and Register",
-      vocab: ["pertanto", "altresì", "codesto", "onde", "giacché", "ove"],
-      grammar: [
-        "Literary and archaic forms: egli, ella, essi, d'uopo, onde, ove.",
-        "Formal connectors: pertanto, altresì, giacché, anzi, onde.",
-        "Choosing register: informal / standard / formal / literary."
-      ],
-      practice: [
-        "Read a page of a classic novel and identify the register.",
-        "Rewrite a passage from literary to modern standard Italian."
-      ],
-      culture: "Reading classics (Calvino, Moravia, Elena Ferrante) trains the ear for natural rhythm and syntax.",
-      checklist: ["I recognize literary forms.", "I can switch register deliberately.", "I can read 19th-century prose."],
-      exercises: [
-        { q: "Modernize: <i>Egli non sapeva onde procedere.</i>", a: "Lui non sapeva da dove andare / come procedere." }
-      ]
-    },
-    {
-      id: "adv-week6",
-      tab: "Week 6",
-      title: "Week 6 — Fast Speech, Regional Accents, and Listening",
-      vocab: ["che ne so", "boh", "mah", "guarda", "senti", "figurati", "magari"],
-      grammar: [
-        "Discourse particles: boh, mah, magari, figurati — meaning shifts with tone.",
-        "Elision and truncation in speech: <i>un po'</i>, <i>d'accordo</i>, <i>quest'anno</i>.",
-        "Regional pronunciation: Tuscan aspiration, Roman truncation, Southern gemination."
-      ],
-      practice: [
-        "Watch a film scene with subtitles, then without.",
-        "Shadow a native speaker for 2 minutes, imitating rhythm."
-      ],
-      culture: "Italian is highly regional; exposure to multiple accents is essential for real comprehension.",
-      checklist: ["I understand discourse particles.", "I can follow fast speech.", "I recognize regional accents."],
-      exercises: [
-        { q: "What does <i>magari!</i> express?", a: "I wish! / Maybe! (a strong wish or possibility)" }
-      ]
-    },
-    {
-      id: "adv-week7",
-      tab: "Week 7",
-      title: "Week 7 — Formal and Academic Writing",
-      vocab: ["in merito a", "a tal proposito", "in conclusione", "in sostanza", "onde evitare", "si evidenzia"],
-      grammar: [
-        "Formal letter/email conventions: <i>Gentile Dottore, Egregio Signore, Cordiali saluti.</i>",
-        "Academic hedging: <i>sembrerebbe che</i>, <i>è verosimile che</i>, <i>si può ipotizzare</i>.",
-        "Cohesion devices: pertanto, in merito a, a tal proposito, in conclusione."
-      ],
-      practice: [
-        "Write a formal complaint email (200 words).",
-        "Write an academic paragraph with hedging and citations."
-      ],
-      culture: "Italian formal correspondence uses many formulas; using them correctly signals professionalism.",
-      checklist: ["I can write a formal email.", "I can hedge academic claims.", "I use cohesion devices well."],
-      exercises: [
-        { q: "Open a formal email to a professor.", a: "Gentile Professore / Gentile Professoressa," }
-      ]
-    },
-    {
-      id: "adv-week8",
-      tab: "Week 8",
-      title: "Week 8 — Near-Native Fluency and Nuance",
-      vocab: ["sottigliezze", "sfumature", "in buona sostanza", "a conti fatti", "per l'appunto"],
-      grammar: [
-        "Subtle tense choices for nuance and emphasis.",
-        "Word order for focus and emphasis: <i>È lui che l'ha fatto.</i> (cleft sentences).",
-        "Pragmatics: irony, understatement, and politeness strategies."
-      ],
-      practice: [
-        "Debate a complex topic for 15 minutes.",
-        "Write a 400-word essay with a clear thesis and counter-argument."
-      ],
-      culture: "At C1+, the goal is not perfection but naturalness — sounding like an educated native speaker.",
-      checklist: ["I can argue a nuanced position.", "I can use cleft sentences.", "I understand irony and understatement."],
-      exercises: [
-        { q: "Emphasize that <i>he</i> did it (not someone else).", a: "È lui che l'ha fatto." }
-      ]
-    }
-  ];
-
-  var TRACKS = { beginner: BEGINNER, intermediate: INTERMEDIATE, advanced: ADVANCED };
-  var LESSONS = BEGINNER;
+  var TRACKS = window.LESSON_TRACKS || { beginner: [], intermediate: [], advanced: [] };
+  var LESSONS = TRACKS.beginner;
 
   var el = function (id) { return document.getElementById(id); };
   var tabsEl = el("tabs");
@@ -922,13 +386,36 @@
     return section("Exercises — type or speak your answer", items);
   }
 
+  function esc(s) {
+    return String(s).replace(/"/g, "&quot;");
+  }
+
   function renderLesson(lesson) {
     var parts = [];
     parts.push("<h2>" + lesson.title + "</h2>");
 
-    if (lesson.vocab && lesson.vocab.length) {
+    if (lesson.objectives && lesson.objectives.length) {
+      parts.push(section("Learning objectives", "<ul>" + lesson.objectives.map(function (o) { return "<li>" + o + "</li>"; }).join("") + "</ul>"));
+    }
+
+    if (lesson.dialogue && lesson.dialogue.length) {
+      var lines = lesson.dialogue.map(function (d) {
+        return "<div class='dialogue-line'><button class='dialogue-play' data-say=\"" + esc(d.it) + "\">🔊</button>" +
+          "<div><div class='dialogue-it'>" + d.it + "</div><div class='dialogue-en'>" + d.en + "</div></div></div>";
+      }).join("");
+      parts.push(section("Dialogue — tap 🔊 to hear each line", "<div class='dialogue'>" + lines + "</div>"));
+    }
+
+    if (lesson.vocabItems && lesson.vocabItems.length) {
+      var rows = lesson.vocabItems.map(function (v) {
+        return "<span class='chip' data-say=\"" + esc(v.it) + "\">" +
+          "<span class='speaker'>🔊</span><b>" + v.it + "</b>" +
+          (v.en ? " <span class='chip-en'>" + v.en + "</span>" : "") + "</span>";
+      }).join("");
+      parts.push(section("Vocabulary — tap to hear", "<div class='vocab'>" + rows + "</div>"));
+    } else if (lesson.vocab && lesson.vocab.length) {
       var chips = lesson.vocab.map(function (word) {
-        return "<span class='chip' data-say=\"" + word.replace(/"/g, "&quot;") + "\">" +
+        return "<span class='chip' data-say=\"" + esc(word) + "\">" +
           "<span class='speaker'>🔊</span>" + word + "</span>";
       }).join("");
       parts.push(section("Vocabulary — tap to hear", "<div class='vocab'>" + chips + "</div>"));
@@ -940,6 +427,18 @@
 
     if (lesson.practice) {
       parts.push(section("Practice", "<ul>" + lesson.practice.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
+    }
+
+    if (lesson.speaking && lesson.speaking.length) {
+      parts.push(section("🗣️ Speaking practice", "<ul class='practice-list'>" + lesson.speaking.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
+    }
+
+    if (lesson.writing && lesson.writing.length) {
+      parts.push(section("✍️ Writing practice", "<ul class='practice-list'>" + lesson.writing.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
+    }
+
+    if (lesson.describing && lesson.describing.length) {
+      parts.push(section("🖼️ Describe & explain", "<ul class='practice-list'>" + lesson.describing.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
     }
 
     if (lesson.exercises && lesson.exercises.length) {
@@ -1008,6 +507,9 @@
       });
     });
     panelEl.querySelectorAll("button.pronounce[data-say]").forEach(function (btn) {
+      btn.addEventListener("click", function () { speak(btn.getAttribute("data-say")); });
+    });
+    panelEl.querySelectorAll("button.dialogue-play[data-say]").forEach(function (btn) {
       btn.addEventListener("click", function () { speak(btn.getAttribute("data-say")); });
     });
   }
