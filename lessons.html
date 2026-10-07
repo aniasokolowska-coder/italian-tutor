@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Beginner Italian — Interactive Lesson Plan</title>
+<style>
+  :root {
+    --bg: #0f1226;
+    --panel: #1a1f3c;
+    --panel-2: #232a52;
+    --accent: #6c8cff;
+    --accent-2: #43d6a5;
+    --text: #eef1ff;
+    --muted: #9aa3c7;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #232a52 0%, var(--bg) 60%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 80px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 22px; }
+  h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .top-links { margin-top: 12px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  a.btn, button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 12px;
+    padding: 9px 15px;
+    cursor: pointer;
+    background: var(--panel-2);
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.08s ease;
+  }
+  a.btn:hover, button:hover { background: #2c3566; }
+  button:active { transform: scale(0.97); }
+  a.btn.primary, button.primary { background: var(--accent); color: #0b0f24; font-weight: 700; }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 6px 2px 12px;
+    margin-bottom: 10px;
+    scrollbar-width: thin;
+  }
+  .tab {
+    white-space: nowrap;
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: var(--muted);
+    padding: 9px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .tab.active { background: var(--accent); color: #0b0f24; font-weight: 700; }
+  .tab.done::after { content: " ✓"; color: var(--accent-2); font-weight: 700; }
+  .tab.active.done::after { color: #06231a; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .panel h2 { margin-top: 0; font-size: 1.35rem; }
+  .section { margin: 18px 0; }
+  .section h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-2);
+    margin: 0 0 8px;
+  }
+  ul { margin: 6px 0; padding-left: 20px; line-height: 1.6; }
+  li { margin-bottom: 4px; }
+  .vocab { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    background: var(--panel-2);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 999px;
+    padding: 7px 13px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s ease;
+  }
+  .chip:hover { background: #2c3566; }
+  .chip .speaker { font-size: 0.8rem; opacity: 0.7; }
+  .culture {
+    background: rgba(108,140,255,0.1);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .progress-box { margin-top: 20px; }
+  .progress-box label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .progress-box input { margin-top: 3px; transform: scale(1.2); accent-color: var(--accent-2); }
+  .status { margin-top: 14px; min-height: 18px; font-size: 0.85rem; color: var(--muted); }
+  .row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .overview-grid { grid-template-columns: 1fr; } }
+  .week-nav { display: flex; justify-content: space-between; margin-top: 22px; gap: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.92rem; }
+  th { color: var(--muted); font-weight: 600; }
+  .voice-bar { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+  .voice-bar label { color: var(--muted); font-size: 0.82rem; }
+  select {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    max-width: 260px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Beginner Italian — Lesson Plan</h1>
+    <p>An interactive 8-week A1 course. Tap any word to hear it pronounced.</p>
+    <div class="top-links">
+      <a class="btn primary" href="index.html">⇄ Open Translator</a>
+      <button id="resetProgress">↺ Reset Progress</button>
+    </div>
+  </header>
+
+  <div class="voice-bar">
+    <label for="voiceSelect">Italian voice:</label>
+    <select id="voiceSelect"></select>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="panel" id="panel"></div>
+
+  <div class="status" id="status"></div>
+  <footer>Progress is saved in your browser only.</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var LESSONS = [
+    {
+      id: "overview",
+      tab: "Overview",
+      title: "Course Overview",
+      html: [
+        "<p>A structured 8-week plan for a complete beginner learning Italian, written in English. Each week builds on the previous one.</p>",
+        "<div class='overview-grid'>",
+        "<div class='section'><h3>Details</h3><ul>",
+        "<li><b>Level:</b> CEFR A1 (absolute beginner)</li>",
+        "<li><b>Duration:</b> 8 weeks, 3 sessions/week (30–45 min)</li>",
+        "<li><b>Goal:</b> Hold a simple conversation, order food, ask directions.</li>",
+        "<li><b>Method:</b> Short, frequent sessions with lots of speaking out loud.</li>",
+        "</ul></div>",
+        "<div class='section'><h3>Each session</h3><ul>",
+        "<li><b>Warm-up (5 min):</b> Review the previous lesson out loud.</li>",
+        "<li><b>New material (15 min):</b> Vocabulary + one grammar point.</li>",
+        "<li><b>Practice (15 min):</b> Speak, write, or role-play.</li>",
+        "<li><b>Cool-down (5 min):</b> Say what you learned without notes.</li>",
+        "</ul></div>",
+        "</div>",
+        "<div class='section'><h3>Weekly rhythm</h3><table>",
+        "<tr><th>Day</th><th>Focus</th></tr>",
+        "<tr><td>Monday</td><td>New vocabulary + grammar</td></tr>",
+        "<tr><td>Wednesday</td><td>Speaking and role-play</td></tr>",
+        "<tr><td>Friday</td><td>Review + listening practice</td></tr>",
+        "</table></div>"
+      ].join("")
+    },
+    {
+      id: "week1",
+      tab: "Week 1",
+      title: "Week 1 — Greetings and Introductions",
+      vocab: ["ciao", "buongiorno", "buonasera", "arrivederci", "per favore", "grazie", "prego", "sì", "no", "come stai?"],
+      grammar: [
+        "Subject pronouns: <b>io, tu, lui/lei, noi, voi, loro</b>",
+        "The verb <b>essere</b> (to be): sono, sei, è, siamo, siete, sono",
+        "The verb <b>chiamarsi</b> (to be called): mi chiamo, ti chiami…"
+      ],
+      practice: [
+        "Introduce yourself: \u201cCiao, mi chiamo ___. Sono ___.\u201d",
+        "Ask and answer: \u201cCome ti chiami?\u201d / \u201cCome stai?\u201d"
+      ],
+      culture: "Italians often use <i>ciao</i> for both hello and goodbye, but only with friends and family. Use <i>buongiorno</i> in formal settings.",
+      checklist: ["I can say hello and goodbye.", "I can introduce myself by name.", "I can ask someone their name and how they are."]
+    },
+    {
+      id: "week2",
+      tab: "Week 2",
+      title: "Week 2 — Numbers, Dates, and the Alphabet",
+      vocab: ["uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci", "venti", "cento", "lunedì", "gennaio"],
+      grammar: [
+        "The verb <b>avere</b> (to have): ho, hai, ha, abbiamo, avete, hanno",
+        "Asking age: \u201cQuanti anni hai?\u201d — \u201cHo ___ anni.\u201d"
+      ],
+      practice: [
+        "Count to 100 out loud.",
+        "Say your birthday: \u201cIl mio compleanno è il ___.\u201d",
+        "Spell your name using the Italian alphabet."
+      ],
+      culture: "The Italian alphabet has 21 letters; foreign letters (j, k, w, x, y) appear only in loanwords.",
+      checklist: ["I can count to 100.", "I can say my age and birthday.", "I know the days and months."]
+    },
+    {
+      id: "week3",
+      tab: "Week 3",
+      title: "Week 3 — People, Family, and Articles",
+      vocab: ["la famiglia", "la madre", "il padre", "il fratello", "la sorella", "il figlio", "la figlia", "il nonno", "la nonna", "l'amico", "l'amica"],
+      grammar: [
+        "Definite articles: <b>il, lo, la, l', i, gli, le</b>",
+        "Indefinite articles: <b>un, uno, una, un'</b>",
+        "Noun gender (masculine/feminine) and number (singular/plural)"
+      ],
+      practice: [
+        "Describe your family: \u201cHo un fratello e due sorelle.\u201d",
+        "Match the correct article to new nouns."
+      ],
+      culture: "Family is central to Italian culture; <i>la mamma</i> and <i>il papà</i> are common even for adults.",
+      checklist: ["I can name family members.", "I can use the correct article.", "I can describe my family in a sentence."]
+    },
+    {
+      id: "week4",
+      tab: "Week 4",
+      title: "Week 4 — Everyday Objects and Regular Verbs",
+      vocab: ["la casa", "la cucina", "il libro", "il telefono", "la chiave", "la borsa", "l'acqua", "il pane", "il caffè"],
+      grammar: [
+        "Present tense of <b>-are</b> verbs: parlare → parlo, parli, parla, parliamo, parlate, parlano",
+        "Negation with <b>non</b>: \u201cNon parlo italiano.\u201d"
+      ],
+      practice: [
+        "Describe what is in your bag.",
+        "Make 5 negative sentences about yourself."
+      ],
+      culture: "Coffee culture — ordering \u201cun caffè\u201d gets you an espresso by default.",
+      checklist: ["I can name everyday objects.", "I can conjugate a regular -are verb.", "I can make negative sentences."]
+    },
+    {
+      id: "week5",
+      tab: "Week 5",
+      title: "Week 5 — Food and Ordering",
+      vocab: ["il ristorante", "il menù", "il conto", "l'antipasto", "il primo", "il secondo", "il dolce", "il vino", "la pizza", "il gelato"],
+      grammar: [
+        "Polite requests with <b>vorrei</b> (I would like)",
+        "The verb <b>prendere</b> (to take/have): prendo, prendi, prende…"
+      ],
+      practice: [
+        "Role-play ordering at a restaurant.",
+        "Read a simple menu and ask for the bill: \u201cIl conto, per favore.\u201d"
+      ],
+      culture: "A full Italian meal has multiple courses; it is normal to linger over coffee after eating.",
+      checklist: ["I can order food and drinks.", "I can ask for the bill.", "I know the course names on a menu."]
+    },
+    {
+      id: "week6",
+      tab: "Week 6",
+      title: "Week 6 — Directions and the City",
+      vocab: ["la strada", "la piazza", "la stazione", "a destra", "a sinistra", "dritto", "vicino", "lontano", "dove?"],
+      grammar: [
+        "The verb <b>andare</b> (to go): vado, vai, va, andiamo, andate, vanno",
+        "Prepositions of place: a, in, su, sotto, accanto a"
+      ],
+      practice: [
+        "Ask for directions: \u201cScusi, dov'è la stazione?\u201d",
+        "Give simple directions using a map."
+      ],
+      culture: "Italian cities often have a central <i>piazza</i> that serves as a meeting point.",
+      checklist: ["I can ask for directions.", "I can understand left, right, straight.", "I can name places in a city."]
+    },
+    {
+      id: "week7",
+      tab: "Week 7",
+      title: "Week 7 — Daily Routine and Time",
+      vocab: ["la mattina", "il pomeriggio", "la sera", "la notte", "svegliarsi", "mangiare", "lavorare", "dormire"],
+      grammar: [
+        "Reflexive verbs: mi sveglio, ti svegli, si sveglia…",
+        "Telling time: \u201cSono le tre.\u201d / \u201cÈ l'una.\u201d"
+      ],
+      practice: [
+        "Describe your day from morning to night.",
+        "Ask and answer: \u201cA che ora…?\u201d"
+      ],
+      culture: "Many shops close in the early afternoon for <i>la pausa</i> (riposo).",
+      checklist: ["I can describe my daily routine.", "I can tell the time.", "I can use reflexive verbs."]
+    },
+    {
+      id: "week8",
+      tab: "Week 8",
+      title: "Week 8 — Review and Conversation",
+      vocab: ["e", "ma", "perché", "quindi", "ho mangiato", "sono andato", "sono andata"],
+      grammar: [
+        "Passato prossimo (intro): \u201cHo mangiato\u201d, \u201cSono andato/a\u201d",
+        "Connecting ideas: e, ma, perché, quindi"
+      ],
+      practice: [
+        "Hold a 3–5 minute conversation combining all topics.",
+        "Write a short paragraph about yourself in Italian."
+      ],
+      culture: "Regional differences are strong; greetings and food names change from north to south.",
+      checklist: ["I can talk about the past.", "I can connect ideas.", "I can hold a short conversation."]
+    }
+  ];
+
+  var el = function (id) { return document.getElementById(id); };
+  var tabsEl = el("tabs");
+  var panelEl = el("panel");
+  var statusEl = el("status");
+  var voiceSelect = el("voiceSelect");
+  var STORAGE_KEY = "italian-lesson-progress";
+  var current = "overview";
+
+  var progress = {};
+  try { progress = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch (e) { progress = {}; }
+
+  function saveProgress() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch (e) {}
+  }
+
+  function setStatus(msg) { statusEl.textContent = msg || ""; }
+
+  /* ---------- Voice handling (shared logic with translator) ---------- */
+  var allVoices = [];
+  var PREFERRED_IT = ["alice", "elsa", "luca", "isabella", "google italiano", "microsoft elsa", "microsoft cosimo", "microsoft diego", "microsoft isabella", "italian"];
+
+  function loadVoices() {
+    if (!("speechSynthesis" in window)) { return; }
+    allVoices = window.speechSynthesis.getVoices() || [];
+    populateVoices();
+  }
+
+  function scoreIt(voice) {
+    var name = (voice.name || "").toLowerCase();
+    for (var i = 0; i < PREFERRED_IT.length; i++) {
+      if (name.indexOf(PREFERRED_IT[i]) !== -1) { return 100 - i; }
+    }
+    return voice.localService ? 10 : 1;
+  }
+
+  function populateVoices() {
+    var matches = allVoices.filter(function (v) {
+      return v.lang && v.lang.toLowerCase().indexOf("it") === 0;
+    });
+    matches.sort(function (a, b) { return scoreIt(b) - scoreIt(a); });
+    voiceSelect.innerHTML = "";
+    if (!matches.length) {
+      var o = document.createElement("option");
+      o.textContent = "No Italian voices found";
+      o.value = "";
+      voiceSelect.appendChild(o);
+      return;
+    }
+    matches.forEach(function (v) {
+      var o = document.createElement("option");
+      o.value = v.name;
+      o.textContent = v.name + " (" + v.lang + ")";
+      voiceSelect.appendChild(o);
+    });
+  }
+
+  function speak(text) {
+    if (!("speechSynthesis" in window)) { setStatus("Speech not supported in this browser."); return; }
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "it-IT";
+    utter.rate = 0.95;
+
+    var chosen = null;
+    if (voiceSelect.value) {
+      chosen = allVoices.filter(function (v) { return v.name === voiceSelect.value; })[0];
+    }
+    if (!chosen) {
+      chosen = allVoices.filter(function (v) { return v.lang && v.lang.toLowerCase().indexOf("it") === 0; })
+        .sort(function (a, b) { return scoreIt(b) - scoreIt(a); })[0];
+    }
+    if (chosen) { utter.voice = chosen; utter.lang = chosen.lang; }
+    window.speechSynthesis.speak(utter);
+  }
+
+  if ("speechSynthesis" in window) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  voiceSelect.addEventListener("change", function () { speak("Ciao, questa è la voce selezionata."); });
+
+  /* ---------- Rendering ---------- */
+  function renderTabs() {
+    tabsEl.innerHTML = "";
+    LESSONS.forEach(function (lesson) {
+      var b = document.createElement("button");
+      b.className = "tab" + (lesson.id === current ? " active" : "");
+      b.textContent = lesson.tab;
+      b.addEventListener("click", function () { current = lesson.id; render(); });
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function section(title, inner) {
+    return "<div class='section'><h3>" + title + "</h3>" + inner + "</div>";
+  }
+
+  function renderOverview() {
+    return LESSONS[0].html;
+  }
+
+  function renderLesson(lesson) {
+    var parts = [];
+    parts.push("<h2>" + lesson.title + "</h2>");
+
+    if (lesson.vocab && lesson.vocab.length) {
+      var chips = lesson.vocab.map(function (word) {
+        return "<span class='chip' data-say=\"" + word.replace(/"/g, "&quot;") + "\">" +
+          "<span class='speaker'>🔊</span>" + word + "</span>";
+      }).join("");
+      parts.push(section("Vocabulary — tap to hear", "<div class='vocab'>" + chips + "</div>"));
+    }
+
+    if (lesson.grammar) {
+      parts.push(section("Grammar", "<ul>" + lesson.grammar.map(function (g) { return "<li>" + g + "</li>"; }).join("") + "</ul>"));
+    }
+
+    if (lesson.practice) {
+      parts.push(section("Practice", "<ul>" + lesson.practice.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
+    }
+
+    if (lesson.culture) {
+      parts.push(section("Culture note", "<div class='culture'>" + lesson.culture + "</div>"));
+    }
+
+    if (lesson.checklist) {
+      var idx = LESSONS.indexOf(lesson);
+      var boxes = lesson.checklist.map(function (item, i) {
+        var key = lesson.id + ":" + i;
+        var checked = progress[key] ? " checked" : "";
+        return "<label><input type='checkbox' data-key=\"" + key + "\"" + checked + "> <span>" + item + "</span></label>";
+      }).join("");
+      parts.push("<div class='progress-box'><h3>Progress — this week</h3>" + boxes + "</div>");
+    }
+
+    var idx2 = LESSONS.indexOf(lesson);
+    var prev = LESSONS[idx2 - 1];
+    var next = LESSONS[idx2 + 1];
+    var nav = "<div class='week-nav'>";
+    nav += prev ? "<button data-go='" + prev.id + "'>← " + prev.tab + "</button>" : "<span></span>";
+    nav += next ? "<button data-go='" + next.id + "' class='primary'>" + next.tab + " →</button>" : "<span></span>";
+    nav += "</div>";
+    parts.push(nav);
+
+    return parts.join("");
+  }
+
+  function render() {
+    renderTabs();
+    var lesson = LESSONS.filter(function (l) { return l.id === current; })[0];
+    panelEl.innerHTML = current === "overview" ? renderOverview() : renderLesson(lesson);
+    wirePanel();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function wirePanel() {
+    panelEl.querySelectorAll(".chip").forEach(function (chip) {
+      chip.addEventListener("click", function () { speak(chip.getAttribute("data-say")); });
+    });
+    panelEl.querySelectorAll("input[type=checkbox]").forEach(function (box) {
+      box.addEventListener("change", function () {
+        progress[box.getAttribute("data-key")] = box.checked;
+        saveProgress();
+        renderTabs();
+      });
+    });
+    panelEl.querySelectorAll("[data-go]").forEach(function (btn) {
+      btn.addEventListener("click", function () { current = btn.getAttribute("data-go"); render(); });
+    });
+  }
+
+  el("resetProgress").addEventListener("click", function () {
+    if (confirm("Clear all saved progress?")) {
+      progress = {};
+      saveProgress();
+      render();
+      setStatus("Progress reset.");
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

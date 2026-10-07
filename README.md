@@ -1,9 +1,10 @@
 # Italian Tutor
 
-Two beginner-friendly tools in one place:
+Beginner-friendly tools in one place:
 
 1. **English ⇄ Italian Translator** (`index.html`) — a self-contained web app that translates spoken or written English to Italian and Italian to English.
-2. **Beginner Italian Lesson Plan** (`italian-lesson-plan.md`) — an 8-week A1 course written in English.
+2. **Interactive Lesson Plan** (`lessons.html`) — the 8-week A1 course as clickable weekly tabs with pronunciation on every vocabulary word and saved progress.
+3. **Lesson Plan (Markdown)** (`italian-lesson-plan.md`) — the same 8-week A1 course as a plain document.
 
 ## Translator Features
 
