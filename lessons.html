@@ -163,6 +163,29 @@
     font-size: 0.8rem;
     padding: 6px 12px;
   }
+  .exercise .q { line-height: 1.55; }
+  .answer-row { display: flex; gap: 8px; margin-top: 10px; align-items: stretch; }
+  .answer-input {
+    flex: 1;
+    background: #121734;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+  .answer-input:focus { outline: 2px solid var(--accent); }
+  .answer-row .mic {
+    background: var(--accent-2);
+    color: #06231a;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 1rem;
+  }
+  .answer-row .mic.listening { background: var(--danger); color: #fff; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
   .voice-bar { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
   .voice-bar label { color: var(--muted); font-size: 0.82rem; }
   select {
@@ -877,11 +900,16 @@
   function renderExercises(lesson) {
     var items = lesson.exercises.map(function (ex, i) {
       var id = lesson.id + "-ex-" + i;
-      return "<div class='exercise'><div>" + ex.q + "</div>" +
+      var inputId = lesson.id + "-in-" + i;
+      return "<div class='exercise'><div class='q'>" + ex.q + "</div>" +
+        "<div class='answer-row'>" +
+        "<input type='text' class='answer-input' id='" + inputId + "' placeholder='Type or speak your answer…' autocomplete='off'>" +
+        "<button class='mic' data-mic='" + inputId + "' title='Speak your answer'>🎤</button>" +
+        "</div>" +
         "<button class='reveal' data-reveal='" + id + "'>Show answer</button>" +
         "<div class='answer' id='" + id + "'>" + ex.a + "</div></div>";
     }).join("");
-    return section("Exercises", items);
+    return section("Exercises — type or speak your answer", items);
   }
 
   function renderLesson(lesson) {
@@ -964,6 +992,49 @@
         btn.textContent = target.classList.contains("show") ? "Hide answer" : "Show answer";
       });
     });
+    panelEl.querySelectorAll("[data-mic]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        startDictation(btn, document.getElementById(btn.getAttribute("data-mic")));
+      });
+    });
+  }
+
+  function startDictation(button, input) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setStatus("Speech input is not supported. Try Chrome or Edge.");
+      return;
+    }
+    if (!input) { return; }
+
+    var recognition = new SR();
+    recognition.lang = "it-IT";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    var baseText = input.value ? input.value.replace(/\s*$/, "") + " " : "";
+
+    button.classList.add("listening");
+    button.textContent = "⏹";
+    setStatus("Listening… speak your answer in Italian.");
+
+    recognition.onresult = function (event) {
+      var transcript = "";
+      for (var i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      input.value = baseText + transcript;
+    };
+    recognition.onerror = function (event) {
+      setStatus("Microphone error: " + event.error);
+    };
+    recognition.onend = function () {
+      button.classList.remove("listening");
+      button.textContent = "🎤";
+      input.focus();
+    };
+    recognition.start();
   }
 
   function updateLevelBar() {
