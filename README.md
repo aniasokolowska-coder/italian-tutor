@@ -16,11 +16,21 @@ Two beginner-friendly tools in one place:
 
 ## Running Locally
 
-No build step is required. Simply open `index.html` in a browser:
+No build step is required.
+
+**Easiest (no terminal):** double-click **`Start Italian Tutor.command`** in Finder. It starts the local server and opens the app automatically.
+
+**Or run it from the terminal:**
 
 ```bash
-open index.html
+./start.sh
 ```
+
+To use a different port: `./start.sh 9000`
+
+Then open `http://localhost:8000` in Chrome and allow the microphone.
+
+> Opening `index.html` directly (`file://`) works for text translation and speech playback, but Chrome blocks the microphone on `file://` pages. Use the local server above or GitHub Pages for speech input.
 
 Speech input works best in **Chrome** or **Edge**. Text-to-speech works in most modern browsers.
 

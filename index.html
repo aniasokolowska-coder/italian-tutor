@@ -131,7 +131,8 @@
         <label id="toLabelSmall">Italiano (translation)</label>
         <textarea id="targetText" placeholder="La traduzione apparirà qui…" readonly></textarea>
         <div class="row">
-          <button id="speakTarget" class="speak">🔊 Listen</button>
+          <button id="speakTarget" class="speak">🔊 Pronounce</button>
+          <button id="speakTargetSlow">🐢 Slow</button>
           <button id="copyTarget">⧉ Copy</button>
         </div>
       </div>
@@ -218,8 +219,11 @@
       });
   }
 
-  function speak(text, langCode) {
-    if (!text) { return; }
+  function speak(text, langCode, rate) {
+    if (!text) {
+      setStatus("Nothing to pronounce yet.", true);
+      return;
+    }
     if (!("speechSynthesis" in window)) {
       setStatus("Speech playback is not supported in this browser.", true);
       return;
@@ -227,6 +231,15 @@
     window.speechSynthesis.cancel();
     var utter = new SpeechSynthesisUtterance(text);
     utter.lang = langCode;
+    utter.rate = rate || 1;
+    utter.pitch = 1;
+
+    var voices = window.speechSynthesis.getVoices();
+    var match = voices.filter(function (v) {
+      return v.lang && v.lang.toLowerCase().indexOf(langCode.slice(0, 2)) === 0;
+    })[0];
+    if (match) { utter.voice = match; }
+
     window.speechSynthesis.speak(utter);
   }
 
@@ -283,7 +296,11 @@
   });
 
   el("speakTarget").addEventListener("click", function () {
-    speak(targetText.value.trim(), langs[state.to].speech);
+    speak(targetText.value.trim(), langs[state.to].speech, 1);
+  });
+
+  el("speakTargetSlow").addEventListener("click", function () {
+    speak(targetText.value.trim(), langs[state.to].speech, 0.6);
   });
 
   el("clearSource").addEventListener("click", function () {
