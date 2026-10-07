@@ -158,11 +158,13 @@
     font-weight: 600;
   }
   .exercise .answer.show { display: block; }
-  .exercise button.reveal {
-    margin-top: 8px;
+  .exercise-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .exercise button.reveal,
+  .exercise button.pronounce {
     font-size: 0.8rem;
     padding: 6px 12px;
   }
+  .exercise button.pronounce { background: var(--panel-2); color: var(--accent-2); font-weight: 600; }
   .exercise .q { line-height: 1.55; }
   .answer-row { display: flex; gap: 8px; margin-top: 10px; align-items: stretch; }
   .answer-input {
@@ -897,16 +899,24 @@
     return LESSONS[0].html;
   }
 
+  function stripHtml(html) {
+    return String(html).replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ");
+  }
+
   function renderExercises(lesson) {
     var items = lesson.exercises.map(function (ex, i) {
       var id = lesson.id + "-ex-" + i;
       var inputId = lesson.id + "-in-" + i;
+      var spoken = stripHtml(ex.a).replace(/"/g, "&quot;");
       return "<div class='exercise'><div class='q'>" + ex.q + "</div>" +
         "<div class='answer-row'>" +
         "<input type='text' class='answer-input' id='" + inputId + "' placeholder='Type or speak your answer…' autocomplete='off'>" +
         "<button class='mic' data-mic='" + inputId + "' title='Speak your answer'>🎤</button>" +
         "</div>" +
+        "<div class='exercise-actions'>" +
         "<button class='reveal' data-reveal='" + id + "'>Show answer</button>" +
+        "<button class='pronounce' data-say=\"" + spoken + "\" title='Hear the correct answer'>🔊 Pronounce</button>" +
+        "</div>" +
         "<div class='answer' id='" + id + "'>" + ex.a + "</div></div>";
     }).join("");
     return section("Exercises — type or speak your answer", items);
@@ -996,6 +1006,9 @@
       btn.addEventListener("click", function () {
         startDictation(btn, document.getElementById(btn.getAttribute("data-mic")));
       });
+    });
+    panelEl.querySelectorAll("button.pronounce[data-say]").forEach(function (btn) {
+      btn.addEventListener("click", function () { speak(btn.getAttribute("data-say")); });
     });
   }
 
