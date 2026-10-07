@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>English ⇄ Italian Translator</title>
+<style>
+  :root {
+    --bg: #0f1226;
+    --panel: #1a1f3c;
+    --panel-2: #232a52;
+    --accent: #6c8cff;
+    --accent-2: #43d6a5;
+    --text: #eef1ff;
+    --muted: #9aa3c7;
+    --danger: #ff6b6b;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #232a52 0%, var(--bg) 60%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 64px;
+  }
+  header { text-align: center; margin-bottom: 20px; }
+  h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .card {
+    width: 100%;
+    max-width: 900px;
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .lang-pill {
+    background: var(--panel-2);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  button {
+    font-family: inherit;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    background: var(--panel-2);
+    color: var(--text);
+    transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+  }
+  button:hover { background: #2c3566; }
+  button:active { transform: scale(0.97); }
+  button.primary { background: var(--accent); color: #0b0f24; font-weight: 700; }
+  button.primary:hover { background: #839dff; }
+  button.speak { background: var(--accent-2); color: #06231a; font-weight: 700; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .pane { display: flex; flex-direction: column; }
+  .pane label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: #121734;
+    color: var(--text);
+    padding: 14px;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    font-family: inherit;
+  }
+  textarea:focus { outline: 2px solid var(--accent); }
+  .row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .status { margin-top: 14px; min-height: 20px; font-size: 0.9rem; color: var(--muted); text-align: center; }
+  .status.error { color: var(--danger); }
+  .actions { display: flex; justify-content: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .hint { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 18px; }
+  .mic-active { background: var(--danger) !important; color: #fff !important; }
+  footer { margin-top: 22px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>English ⇄ Italian Translator</h1>
+    <p>Type or speak in English or Italian and get an instant translation.</p>
+  </header>
+
+  <div class="card">
+    <div class="controls">
+      <span class="lang-pill" id="fromLabel">English</span>
+      <button id="swapBtn" title="Swap languages">⇄ Swap</button>
+      <span class="lang-pill" id="toLabel">Italiano</span>
+    </div>
+
+    <div class="grid">
+      <div class="pane">
+        <label id="fromLabelSmall">English (source)</label>
+        <textarea id="sourceText" placeholder="Type English here, or press the microphone…"></textarea>
+        <div class="row">
+          <button id="micSource" class="speak">🎤 Speak</button>
+          <button id="speakSource">🔊 Listen</button>
+          <button id="clearSource">✕ Clear</button>
+        </div>
+      </div>
+
+      <div class="pane">
+        <label id="toLabelSmall">Italiano (translation)</label>
+        <textarea id="targetText" placeholder="La traduzione apparirà qui…" readonly></textarea>
+        <div class="row">
+          <button id="speakTarget" class="speak">🔊 Listen</button>
+          <button id="copyTarget">⧉ Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="translateBtn" class="primary">Translate →</button>
+    </div>
+
+    <div class="status" id="status"></div>
+    <div class="hint">Tip: speech input works best in Chrome or Edge. The translation uses a free public API.</div>
+  </div>
+
+  <footer>Built for personal language practice. No data is stored.</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var state = { from: "en", to: "it" };
+
+  var langs = {
+    en: { name: "English", speech: "en-US" },
+    it: { name: "Italiano", speech: "it-IT" }
+  };
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var sourceText = el("sourceText");
+  var targetText = el("targetText");
+  var status = el("status");
+  var fromLabel = el("fromLabel");
+  var toLabel = el("toLabel");
+  var fromLabelSmall = el("fromLabelSmall");
+  var toLabelSmall = el("toLabelSmall");
+  var translateBtn = el("translateBtn");
+  var swapBtn = el("swapBtn");
+
+  function setStatus(msg, isError) {
+    status.textContent = msg || "";
+    status.className = "status" + (isError ? " error" : "");
+  }
+
+  function renderLanguages() {
+    fromLabel.textContent = langs[state.from].name;
+    toLabel.textContent = langs[state.to].name;
+    fromLabelSmall.textContent = langs[state.from].name + " (source)";
+    toLabelSmall.textContent = langs[state.to].name + " (translation)";
+    sourceText.placeholder = state.from === "en"
+      ? "Type English here, or press the microphone…"
+      : "Scrivi qui in italiano, oppure premi il microfono…";
+    targetText.placeholder = state.to === "it"
+      ? "La traduzione apparirà qui…"
+      : "The translation will appear here…";
+  }
+
+  function translate() {
+    var text = sourceText.value.trim();
+    if (!text) {
+      setStatus("Enter or speak some text first.", true);
+      return;
+    }
+    setStatus("Translating…");
+    translateBtn.disabled = true;
+
+    var url = "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(text) + "&langpair=" + state.from + "|" + state.to;
+
+    fetch(url)
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var translated = data && data.responseData && data.responseData.translatedText;
+        if (!translated) {
+          throw new Error("No translation returned.");
+        }
+        targetText.value = translated;
+        setStatus("Done.");
+      })
+      .catch(function (err) {
+        setStatus("Translation failed: " + err.message, true);
+      })
+      .finally(function () {
+        translateBtn.disabled = false;
+      });
+  }
+
+  function speak(text, langCode) {
+    if (!text) { return; }
+    if (!("speechSynthesis" in window)) {
+      setStatus("Speech playback is not supported in this browser.", true);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langCode;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function startListening(button, langCode) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setStatus("Speech input is not supported. Try Chrome or Edge.", true);
+      return;
+    }
+    var recognition = new SR();
+    recognition.lang = langCode;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    button.classList.add("mic-active");
+    setStatus("Listening…");
+
+    recognition.onresult = function (event) {
+      var transcript = event.results[0][0].transcript;
+      sourceText.value = transcript;
+      setStatus("Heard: " + transcript);
+      translate();
+    };
+    recognition.onerror = function (event) {
+      setStatus("Microphone error: " + event.error, true);
+    };
+    recognition.onend = function () {
+      button.classList.remove("mic-active");
+    };
+    recognition.start();
+  }
+
+  translateBtn.addEventListener("click", translate);
+
+  swapBtn.addEventListener("click", function () {
+    var tmp = state.from;
+    state.from = state.to;
+    state.to = tmp;
+    var currentTarget = targetText.value;
+    if (currentTarget) {
+      sourceText.value = currentTarget;
+      targetText.value = "";
+    }
+    renderLanguages();
+    setStatus("");
+  });
+
+  el("micSource").addEventListener("click", function () {
+    startListening(this, langs[state.from].speech);
+  });
+
+  el("speakSource").addEventListener("click", function () {
+    speak(sourceText.value.trim(), langs[state.from].speech);
+  });
+
+  el("speakTarget").addEventListener("click", function () {
+    speak(targetText.value.trim(), langs[state.to].speech);
+  });
+
+  el("clearSource").addEventListener("click", function () {
+    sourceText.value = "";
+    targetText.value = "";
+    setStatus("");
+    sourceText.focus();
+  });
+
+  el("copyTarget").addEventListener("click", function () {
+    var text = targetText.value.trim();
+    if (!text) { return; }
+    navigator.clipboard.writeText(text).then(function () {
+      setStatus("Copied to clipboard.");
+    });
+  });
+
+  sourceText.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      translate();
+    }
+  });
+
+  renderLanguages();
+})();
+</script>
+</body>
+</html>
