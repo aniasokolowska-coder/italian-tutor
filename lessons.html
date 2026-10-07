@@ -203,6 +203,61 @@
   .answer-row .mic.listening { background: var(--danger); color: #fff; animation: pulse 1s infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
   .voice-bar { display: flex; align-items: center; gap: 10px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+  .settings-panel {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .settings-note { color: var(--muted); font-size: 0.85rem; line-height: 1.5; margin: 0 0 12px; }
+  .settings-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .settings-row input {
+    background: #121734;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    flex: 1;
+    min-width: 160px;
+  }
+  .settings-status { font-size: 0.85rem; color: var(--accent-2); }
+  .feedback {
+    margin-top: 10px;
+    background: rgba(108,140,255,0.1);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .feedback.error { background: rgba(255,107,107,0.1); border-left-color: var(--danger); }
+  .feedback .score { font-weight: 700; color: var(--accent-2); }
+  .practice-block {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .practice-block .prompt { line-height: 1.55; margin-bottom: 10px; }
+  .practice-block .practice-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .practice-block textarea {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+    background: #121734;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+  .practice-block textarea:focus { outline: 2px solid var(--accent); }
   .voice-bar label { color: var(--muted); font-size: 0.82rem; }
   select {
     background: var(--panel-2);
@@ -237,6 +292,24 @@
   <div class="voice-bar">
     <label for="voiceSelect">Italian voice:</label>
     <select id="voiceSelect"></select>
+    <button id="toggleSettings" type="button">⚙️ AI feedback</button>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel" hidden>
+    <p class="settings-note">
+      Optional: paste a Bifrost API key to get instant AI corrections on your speaking and writing answers.
+      The key is stored <b>only in this browser</b> (localStorage) and is never saved to the site or GitHub.
+    </p>
+    <div class="settings-row">
+      <input type="password" id="apiKey" placeholder="Bifrost API key (optional)" autocomplete="off">
+      <input type="text" id="apiBase" value="https://bifrost.ai-gateway.joinroot.com/v1" autocomplete="off">
+      <input type="text" id="apiModel" value="openai/gpt-5.6-luna" autocomplete="off">
+    </div>
+    <div class="settings-row">
+      <button id="saveSettings" class="primary" type="button">Save</button>
+      <button id="clearSettings" type="button">Clear key</button>
+      <span id="settingsStatus" class="settings-status"></span>
+    </div>
   </div>
 
   <div class="tabs" id="tabs"></div>
@@ -262,7 +335,16 @@
   var levelBar = el("levelBar");
   var STORAGE_KEY = "italian-lesson-progress";
   var LEVEL_KEY = "italian-lesson-level";
+  var SETTINGS_KEY = "italian-feedback-settings";
   var currentLevel = "beginner";
+
+  var settings = { apiKey: "", apiBase: "https://bifrost.ai-gateway.joinroot.com/v1", apiModel: "openai/gpt-5.6-luna" };
+  try {
+    var storedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    if (storedSettings.apiKey) { settings.apiKey = storedSettings.apiKey; }
+    if (storedSettings.apiBase) { settings.apiBase = storedSettings.apiBase; }
+    if (storedSettings.apiModel) { settings.apiModel = storedSettings.apiModel; }
+  } catch (e) {}
   try {
     var savedLevel = localStorage.getItem(LEVEL_KEY);
     if (savedLevel && TRACKS[savedLevel]) { currentLevel = savedLevel; }
@@ -390,6 +472,24 @@
     return String(s).replace(/"/g, "&quot;");
   }
 
+  function renderPractice(lesson, kind, items) {
+    return items.map(function (prompt, i) {
+      var key = lesson.id + ":" + kind + ":" + i;
+      var saved = "";
+      try { saved = localStorage.getItem("italian-answer-" + key) || ""; } catch (e) {}
+      return "<div class='practice-block' data-key=\"" + key + "\">" +
+        "<div class='prompt'>" + prompt + "</div>" +
+        "<textarea data-answer=\"" + key + "\" placeholder='Write your Italian answer here, or use the mic…'>" + saved.replace(/</g, "&lt;") + "</textarea>" +
+        "<div class='practice-actions'>" +
+        "<button class='mic' data-mic-text='" + key + "' title='Dictate your answer'>🎤 Dictate</button>" +
+        "<button class='check' data-check=\"" + key + "\" data-kind='" + kind + "' data-prompt=\"" + esc(prompt) + "\">✓ Check my answer</button>" +
+        "<button class='save-answer' data-save=\"" + key + "\">💾 Save</button>" +
+        "</div>" +
+        "<div class='feedback' data-feedback=\"" + key + "\" hidden></div>" +
+        "</div>";
+    }).join("");
+  }
+
   function renderLesson(lesson) {
     var parts = [];
     parts.push("<h2>" + lesson.title + "</h2>");
@@ -430,15 +530,15 @@
     }
 
     if (lesson.speaking && lesson.speaking.length) {
-      parts.push(section("🗣️ Speaking practice", "<ul class='practice-list'>" + lesson.speaking.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
+      parts.push(section("🗣️ Speaking practice — record yourself, then type what you said for feedback", renderPractice(lesson, "speaking", lesson.speaking)));
     }
 
     if (lesson.writing && lesson.writing.length) {
-      parts.push(section("✍️ Writing practice", "<ul class='practice-list'>" + lesson.writing.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
+      parts.push(section("✍️ Writing practice — write your answer and get feedback", renderPractice(lesson, "writing", lesson.writing)));
     }
 
     if (lesson.describing && lesson.describing.length) {
-      parts.push(section("🖼️ Describe & explain", "<ul class='practice-list'>" + lesson.describing.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul>"));
+      parts.push(section("🖼️ Describe & explain — write or dictate your description", renderPractice(lesson, "describing", lesson.describing)));
     }
 
     if (lesson.exercises && lesson.exercises.length) {
@@ -503,7 +603,7 @@
     });
     panelEl.querySelectorAll("[data-mic]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        startDictation(btn, document.getElementById(btn.getAttribute("data-mic")));
+        startDictation(btn, document.getElementById(btn.getAttribute("data-mic")), "🎤");
       });
     });
     panelEl.querySelectorAll("button.pronounce[data-say]").forEach(function (btn) {
@@ -512,15 +612,134 @@
     panelEl.querySelectorAll("button.dialogue-play[data-say]").forEach(function (btn) {
       btn.addEventListener("click", function () { speak(btn.getAttribute("data-say")); });
     });
+    panelEl.querySelectorAll("[data-answer]").forEach(function (ta) {
+      ta.addEventListener("input", function () { saveAnswer(ta.getAttribute("data-answer"), ta.value); });
+    });
+    panelEl.querySelectorAll("[data-save]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-save");
+        var ta = panelEl.querySelector("[data-answer='" + key + "']");
+        saveAnswer(key, ta ? ta.value : "");
+        btn.textContent = "✓ Saved";
+        setTimeout(function () { btn.textContent = "💾 Save"; }, 1500);
+      });
+    });
+    panelEl.querySelectorAll("[data-mic-text]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-mic-text");
+        var ta = panelEl.querySelector("[data-answer='" + key + "']");
+        startDictation(btn, ta, "🎤 Dictate");
+      });
+    });
+    panelEl.querySelectorAll("[data-check]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-check");
+        var ta = panelEl.querySelector("[data-answer='" + key + "']");
+        checkAnswer(btn.getAttribute("data-prompt"), ta ? ta.value : "", key);
+      });
+    });
   }
 
-  function startDictation(button, input) {
+  function saveAnswer(key, value) {
+    try { localStorage.setItem("italian-answer-" + key, value); } catch (e) {}
+  }
+
+  function showFeedback(key, text, isError) {
+    var box = panelEl.querySelector("[data-feedback='" + key + "']");
+    if (!box) { return; }
+    box.hidden = false;
+    box.className = "feedback" + (isError ? " error" : "");
+    box.textContent = text;
+  }
+
+  function checkAnswer(prompt, answer, key) {
+    answer = (answer || "").trim();
+    if (!answer) {
+      showFeedback(key, "Write or dictate your answer first.", true);
+      return;
+    }
+    if (!settings.apiKey) {
+      showFeedback(key,
+        "No AI key set.\n\nOpen '⚙️ AI feedback' at the top and paste a Bifrost API key to get corrections.\n" +
+        "Your answer is saved automatically either way.", true);
+      return;
+    }
+
+    showFeedback(key, "Checking your answer…", false);
+
+    var system = "You are a friendly Italian tutor. The student is at CEFR level " + currentLevel +
+      ". The task was: \"" + stripHtml(prompt) + "\". " +
+      "The student's answer is written below. " +
+      "Respond in this format:\n" +
+      "Score: X/10\n" +
+      "Corrections: (list each mistake with the fix)\n" +
+      "Improved version: (rewrite their answer correctly in Italian)\n" +
+      "Comment: (one short encouraging sentence in English)\n" +
+      "Keep it concise and always reply in English except the Italian example sentences.";
+
+    fetch(settings.apiBase.replace(/\/$/, "") + "/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + settings.apiKey
+      },
+      body: JSON.stringify({
+        model: settings.apiModel,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: answer }
+        ]
+      })
+    })
+      .then(function (res) {
+        if (!res.ok) { return res.text().then(function (t) { throw new Error("HTTP " + res.status + ": " + t.slice(0, 200)); }); }
+        return res.json();
+      })
+      .then(function (data) {
+        var msg = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (!msg) { throw new Error("No feedback returned."); }
+        showFeedback(key, msg.trim(), false);
+      })
+      .catch(function (err) {
+        showFeedback(key, "Could not get feedback: " + err.message, true);
+      });
+  }
+
+  function loadSettingsIntoForm() {
+    el("apiKey").value = settings.apiKey || "";
+    el("apiBase").value = settings.apiBase;
+    el("apiModel").value = settings.apiModel;
+  }
+
+  el("toggleSettings").addEventListener("click", function () {
+    var panel = el("settingsPanel");
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) { loadSettingsIntoForm(); }
+  });
+
+  el("saveSettings").addEventListener("click", function () {
+    settings.apiKey = el("apiKey").value.trim();
+    settings.apiBase = el("apiBase").value.trim() || "https://bifrost.ai-gateway.joinroot.com/v1";
+    settings.apiModel = el("apiModel").value.trim() || "openai/gpt-5.6-luna";
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+    el("settingsStatus").textContent = settings.apiKey ? "Saved. AI feedback is on." : "Saved (no key — feedback off).";
+  });
+
+  el("clearSettings").addEventListener("click", function () {
+    settings.apiKey = "";
+    try { localStorage.removeItem(SETTINGS_KEY); } catch (e) {}
+    el("apiKey").value = "";
+    el("settingsStatus").textContent = "Key cleared.";
+  });
+
+  function startDictation(button, input, restoreLabel) {
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       setStatus("Speech input is not supported. Try Chrome or Edge.");
       return;
     }
     if (!input) { return; }
+    var label = restoreLabel || "🎤";
 
     var recognition = new SR();
     recognition.lang = "it-IT";
@@ -546,7 +765,7 @@
     };
     recognition.onend = function () {
       button.classList.remove("listening");
-      button.textContent = "🎤";
+      button.textContent = label;
       input.focus();
     };
     recognition.start();

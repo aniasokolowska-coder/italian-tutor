@@ -3,7 +3,18 @@
 Beginner-friendly tools in one place:
 
 1. **English ⇄ Italian Translator** (`index.html`) — a self-contained web app that translates spoken or written English to Italian and Italian to English.
-2. **Interactive Lesson Plan** (`lessons.html` + `lessons-data.js`) — three 8-week courses (Beginner A1, Intermediate B1, Advanced C1) as clickable weekly tabs. Every week includes a listenable dialogue, vocabulary with translations, grammar, and dedicated **speaking**, **writing**, and **describing** practice, plus exercises you can answer by typing or speaking (with pronunciation of the correct answer). Progress is saved in your browser.
+2. **Interactive Lesson Plan** (`lessons.html` + `lessons-data.js`) — three 8-week courses (Beginner A1, Intermediate B1, Advanced C1) as clickable weekly tabs. Every week includes a listenable dialogue, vocabulary with translations, grammar, and dedicated **speaking**, **writing**, and **describing** practice, plus exercises you can answer by typing or speaking (with pronunciation of the correct answer). Progress and answers are saved in your browser.
+
+### Checking your speaking & writing
+
+Each speaking, writing, and describing task has an answer box (type or **dictate**) and a **✓ Check my answer** button. To enable AI corrections:
+
+1. Click **⚙️ AI feedback** at the top.
+2. Paste your Bifrost API key and click **Save**.
+
+The key is stored **only in your browser's localStorage** — it is never written to the site, the repository, or GitHub. If you don't add a key, you can still save and review your answers offline.
+
+> Note: because the app runs entirely in the browser, a key entered there is visible to anyone using that browser profile. For a shared or public device, don't save a key.
 3. **Lesson Plan (Markdown)** (`italian-lesson-plan.md`) — the same 8-week A1 course as a plain document.
 
 ## Translator Features
