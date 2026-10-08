@@ -7,14 +7,20 @@ Beginner-friendly tools in one place:
 
 ### Checking your speaking & writing
 
-Each speaking, writing, and describing task has an answer box (type or **dictate**) and a **✓ Check my answer** button. To enable AI corrections:
+Each speaking, writing, and describing task has an answer box (type or **dictate**), a **💾 Save** button, a **📋 Copy for AI** button, and a **✓ Check my answer** button.
 
-1. Click **⚙️ AI feedback** at the top.
-2. Paste your Bifrost API key and click **Save**.
+**Two ways to get feedback:**
 
-The key is stored **only in your browser's localStorage** — it is never written to the site, the repository, or GitHub. If you don't add a key, you can still save and review your answers offline.
+1. **Copy for AI (always works)** — click **📋 Copy for AI**, then paste into ChatGPT, Claude, or any AI chat. This sends the task and your answer with a ready-made prompt.
+2. **Direct AI feedback** — click **⚙️ AI feedback** at the top, paste a Bifrost API key, and click **Save**. Then **✓ Check my answer** calls Bifrost directly.
 
-> Note: because the app runs entirely in the browser, a key entered there is visible to anyone using that browser profile. For a shared or public device, don't save a key.
+**Important:** direct calls only work if the Bifrost gateway allows requests from this web page's origin (`https://aniasokolowska-coder.github.io`). By default the gateway blocks browser requests (CORS), which shows as *"failed to fetch"*. Ask your Bifrost admin to allow this origin, or use **Copy for AI** instead.
+
+The key is stored **only in your browser's localStorage** — it is never written to the site, the repository, or GitHub. Because the app runs in the browser, a key entered there is visible to anyone using that browser profile; don't save one on a shared device.
+
+### Dialogue translation practice
+
+Each dialogue shows the **English** first, with the Italian hidden. Say or write the Italian yourself, then click **Show Italian** to check. Use **Practice mode** to toggle the Italian on and off.
 3. **Lesson Plan (Markdown)** (`italian-lesson-plan.md`) — the same 8-week A1 course as a plain document.
 
 ## Translator Features

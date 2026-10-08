@@ -112,6 +112,22 @@
   }
   .dialogue-it { font-weight: 600; }
   .dialogue-en { color: var(--muted); font-size: 0.88rem; margin-top: 2px; }
+  .dialogue-body { flex: 1; }
+  .dialogue-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .dialogue-hint { color: var(--muted); font-size: 0.82rem; }
+  .dialogue-reveal {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    padding: 4px 10px;
+    background: var(--panel-2);
+    color: var(--accent-2);
+  }
+  .dialogue.practice .dialogue-it { display: none; }
+  .dialogue.practice .dialogue-it.revealed { display: block; }
+  .dialogue.practice .dialogue-reveal { display: inline-block; }
+  .dialogue:not(.practice) .dialogue-reveal { display: none; }
+  .practice-toggle { background: var(--accent-2); color: #06231a; font-weight: 700; }
+  .practice-toggle.off { background: var(--panel-2); color: var(--muted); font-weight: 500; }
   .culture {
     background: rgba(108,140,255,0.1);
     border-left: 3px solid var(--accent);
@@ -484,6 +500,7 @@
         "<button class='mic' data-mic-text='" + key + "' title='Dictate your answer'>🎤 Dictate</button>" +
         "<button class='check' data-check=\"" + key + "\" data-kind='" + kind + "' data-prompt=\"" + esc(prompt) + "\">✓ Check my answer</button>" +
         "<button class='save-answer' data-save=\"" + key + "\">💾 Save</button>" +
+        "<button class='copy-ai' data-copy=\"" + key + "\" data-prompt=\"" + esc(prompt) + "\">📋 Copy for AI</button>" +
         "</div>" +
         "<div class='feedback' data-feedback=\"" + key + "\" hidden></div>" +
         "</div>";
@@ -499,11 +516,20 @@
     }
 
     if (lesson.dialogue && lesson.dialogue.length) {
-      var lines = lesson.dialogue.map(function (d) {
-        return "<div class='dialogue-line'><button class='dialogue-play' data-say=\"" + esc(d.it) + "\">🔊</button>" +
-          "<div><div class='dialogue-it'>" + d.it + "</div><div class='dialogue-en'>" + d.en + "</div></div></div>";
+      var lines = lesson.dialogue.map(function (d, i) {
+        return "<div class='dialogue-line'>" +
+          "<button class='dialogue-play' data-say=\"" + esc(d.it) + "\">🔊</button>" +
+          "<div class='dialogue-body'>" +
+          "<div class='dialogue-en'>" + d.en + "</div>" +
+          "<div class='dialogue-it' data-it='" + i + "'>" + d.it + "</div>" +
+          "<button class='dialogue-reveal' data-reveal-it='" + i + "'>Show Italian</button>" +
+          "</div></div>";
       }).join("");
-      parts.push(section("Dialogue — tap 🔊 to hear each line", "<div class='dialogue'>" + lines + "</div>"));
+      var controls = "<div class='dialogue-controls'>" +
+        "<button id='dialoguePractice' class='practice-toggle'>🎯 Practice mode: ON</button>" +
+        "<span class='dialogue-hint'>Read the English and say it in Italian, then reveal to check.</span>" +
+        "</div>";
+      parts.push(section("Dialogue — translation practice", controls + "<div class='dialogue' id='dialogueBox'>" + lines + "</div>"));
     }
 
     if (lesson.vocabItems && lesson.vocabItems.length) {
@@ -612,6 +638,34 @@
     panelEl.querySelectorAll("button.dialogue-play[data-say]").forEach(function (btn) {
       btn.addEventListener("click", function () { speak(btn.getAttribute("data-say")); });
     });
+    panelEl.querySelectorAll("[data-reveal-it]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var idx = btn.getAttribute("data-reveal-it");
+        var it = panelEl.querySelector(".dialogue-it[data-it='" + idx + "']");
+        if (!it) { return; }
+        var shown = it.classList.toggle("revealed");
+        btn.textContent = shown ? "Hide Italian" : "Show Italian";
+      });
+    });
+    var dlgToggle = panelEl.querySelector("#dialoguePractice");
+    var dlgBox = panelEl.querySelector("#dialogueBox");
+    if (dlgToggle && dlgBox) {
+      var practiceOn = true;
+      try { practiceOn = localStorage.getItem("italian-dialogue-practice") !== "off"; } catch (e) {}
+      var applyDialogue = function () {
+        dlgBox.classList.toggle("practice", practiceOn);
+        dlgToggle.textContent = "🎯 Practice mode: " + (practiceOn ? "ON" : "OFF");
+        dlgToggle.classList.toggle("off", !practiceOn);
+        panelEl.querySelectorAll(".dialogue-reveal").forEach(function (b) { b.textContent = "Show Italian"; });
+        panelEl.querySelectorAll(".dialogue-it").forEach(function (it) { it.classList.remove("revealed"); });
+      };
+      applyDialogue();
+      dlgToggle.addEventListener("click", function () {
+        practiceOn = !practiceOn;
+        try { localStorage.setItem("italian-dialogue-practice", practiceOn ? "on" : "off"); } catch (e) {}
+        applyDialogue();
+      });
+    }
     panelEl.querySelectorAll("[data-answer]").forEach(function (ta) {
       ta.addEventListener("input", function () { saveAnswer(ta.getAttribute("data-answer"), ta.value); });
     });
@@ -636,6 +690,24 @@
         var key = btn.getAttribute("data-check");
         var ta = panelEl.querySelector("[data-answer='" + key + "']");
         checkAnswer(btn.getAttribute("data-prompt"), ta ? ta.value : "", key);
+      });
+    });
+    panelEl.querySelectorAll("[data-copy]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-copy");
+        var ta = panelEl.querySelector("[data-answer='" + key + "']");
+        var answer = ta ? ta.value.trim() : "";
+        if (!answer) { showFeedback(key, "Write or dictate your answer first.", true); return; }
+        var packet =
+          "You are a friendly Italian tutor. The student is at CEFR level " + currentLevel + ".\n" +
+          "Task: " + stripHtml(btn.getAttribute("data-prompt")) + "\n" +
+          "Student's answer: " + answer + "\n\n" +
+          "Please give: Score /10, Corrections, Improved version, and one encouraging comment.";
+        navigator.clipboard.writeText(packet).then(function () {
+          showFeedback(key, "Copied! Paste this into ChatGPT, Claude, or any AI chat to get feedback.", false);
+        }).catch(function () {
+          showFeedback(key, packet, false);
+        });
       });
     });
   }
@@ -701,7 +773,11 @@
         showFeedback(key, msg.trim(), false);
       })
       .catch(function (err) {
-        showFeedback(key, "Could not get feedback: " + err.message, true);
+        var msg = "Could not get feedback: " + err.message + "\n\n" +
+          "This usually means the Bifrost gateway is not allowing requests from this web page (CORS). " +
+          "Use the '📋 Copy for AI' button instead and paste your answer into any AI chat, " +
+          "or ask your Bifrost admin to allow the origin https://aniasokolowska-coder.github.io.";
+        showFeedback(key, msg, true);
       });
   }
 
