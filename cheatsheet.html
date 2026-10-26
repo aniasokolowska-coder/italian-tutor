@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Italian Verb & Number Cheat Sheets</title>
+<style>
+  :root { --bg:#0f1226; --panel:#1a1f3c; --panel2:#232a52; --accent:#6c8cff; --mint:#43d6a5; --text:#eef1ff; --muted:#9aa3c7; --danger:#ff6b6b; --radius:16px; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px 70px; min-height:100vh; color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:radial-gradient(1200px 600px at 50% -10%,#232a52 0%,var(--bg) 60%); }
+  .wrap { max-width:1000px; margin:auto; }
+  header { text-align:center; margin-bottom:20px; }
+  h1 { margin:0 0 6px; font-size:1.65rem; }
+  header p,.muted { color:var(--muted); }
+  .links,.voice-row,.controls,.button-row { display:flex; align-items:center; justify-content:center; gap:9px; flex-wrap:wrap; }
+  .links { margin-top:12px; }
+  a,button { font:inherit; }
+  a.link,button { text-decoration:none; border:0; border-radius:11px; padding:9px 14px; cursor:pointer; color:var(--text); background:var(--panel2); }
+  a.link:hover,button:hover { background:#344078; }
+  button.primary { background:var(--accent); color:#10152f; font-weight:700; }
+  button.mint { background:var(--mint); color:#082319; font-weight:700; }
+  select,input { font:inherit; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:10px; background:#121734; padding:9px 12px; }
+  .voice-row { justify-content:flex-end; margin-bottom:14px; color:var(--muted); font-size:.85rem; }
+  .card { background:var(--panel); border:1px solid rgba(255,255,255,.07); border-radius:var(--radius); padding:20px; margin:14px 0; box-shadow:0 16px 45px rgba(0,0,0,.25); }
+  .card h2 { margin:0 0 8px; font-size:1.25rem; }
+  .card h3 { margin:16px 0 8px; font-size:.9rem; color:var(--mint); text-transform:uppercase; letter-spacing:.06em; }
+  .controls { justify-content:flex-start; margin:14px 0 8px; }
+  .controls input { flex:1; min-width:200px; }
+  .note { font-size:.86rem; line-height:1.5; color:var(--muted); }
+  .result { margin-top:14px; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; min-width:560px; }
+  th,td { border-bottom:1px solid rgba(255,255,255,.09); padding:9px 10px; text-align:left; }
+  th { color:var(--muted); font-size:.82rem; font-weight:600; }
+  td:first-child { color:var(--muted); }
+  .forms { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; margin-top:14px; }
+  .tense { background:#141936; border-radius:12px; padding:12px; }
+  .tense h3 { margin:0 0 8px; }
+  .form-line { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+  .form-line:last-child { border-bottom:0; }
+  .form-line .person { color:var(--muted); font-size:.85rem; }
+  .form-line .form { font-weight:650; }
+  .form-line button { padding:4px 8px; font-size:.78rem; }
+  .number-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; margin-top:12px; }
+  .number { display:flex; justify-content:space-between; align-items:center; gap:6px; background:#141936; border-radius:10px; padding:8px 10px; }
+  .number b { color:var(--mint); }
+  .number button { padding:4px 7px; font-size:.76rem; }
+  .error { color:var(--danger); }
+  footer { color:var(--muted); text-align:center; font-size:.8rem; margin-top:24px; }
+  @media(max-width:600px) { body { padding:18px 10px 48px; } .card { padding:15px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Italian Verb & Number Cheat Sheets</h1>
+    <p>Enter an Italian infinitive for a conjugation guide, or practice Italian numbers.</p>
+    <div class="links">
+      <a class="link" href="index.html">⇄ Translator</a>
+      <a class="link" href="lessons.html">📚 Lessons</a>
+    </div>
+  </header>
+
+  <div class="voice-row">
+    <label for="voiceSelect">Italian speaker:</label>
+    <select id="voiceSelect" aria-label="Italian speaker"></select>
+    <button id="testVoice" type="button">🔊 Test speaker</button>
+    <span id="voiceStatus" class="muted" aria-live="polite"></span>
+  </div>
+
+  <section class="card">
+    <h2>Verb conjugator</h2>
+    <p class="note">Enter an Italian infinitive ending in <i>-are</i>, <i>-ere</i>, or <i>-ire</i> (for example, <i>parlare</i>). Includes present, passato prossimo, imperfetto, and future. Common irregular verbs are included; unknown verbs use regular patterns.</p>
+    <div class="controls">
+      <input id="verbInput" type="text" placeholder="Italian infinitive, e.g. parlare" aria-label="Italian infinitive" />
+      <button id="conjugateBtn" class="primary">Conjugate</button>
+    </div>
+    <div id="verbMessage" class="note" aria-live="polite"></div>
+    <div id="verbResult" class="result"></div>
+  </section>
+
+  <section class="card">
+    <h2>Numbers cheat sheet</h2>
+    <p class="note">Tap 🔊 to hear a number. Use the converter for numbers from 0 to 999,999.</p>
+    <div class="controls">
+      <input id="numberInput" type="number" min="0" max="999999" placeholder="Enter a number (0–999,999)" aria-label="Number to convert" />
+      <button id="numberBtn" class="primary">Show in Italian</button>
+    </div>
+    <div id="numberResult" class="result" aria-live="polite"></div>
+    <h3>0–20</h3>
+    <div id="basicNumbers" class="number-grid"></div>
+    <h3>Tens</h3>
+    <div id="tensNumbers" class="number-grid"></div>
+    <h3>Hundreds and thousands</h3>
+    <div class="note">100 <b>cento</b> · 200 <b>duecento</b> · 1,000 <b>mille</b> · 2,000 <b>duemila</b> · 1,000,000 <b>un milione</b></div>
+    <p class="note">Spelling tips: <i>venti + uno → ventuno</i> (drop the final vowel); <i>venti + otto → ventotto</i> (double the final consonant); numbers ending in 3 take an accent: <i>ventitré</i>.</p>
+  </section>
+  <footer>Conjugation includes common forms and regular patterns. A few verbs have multiple acceptable uses or auxiliary choices.</footer>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  var people = ["io", "tu", "lui/lei", "noi", "voi", "loro"];
+  var endings = {
+    are: { present: ["o", "i", "a", "iamo", "ate", "ano"], imperfect: ["avo", "avi", "ava", "avamo", "avate", "avano"] },
+    ere: { present: ["o", "i", "e", "iamo", "ete", "ono"], imperfect: ["evo", "evi", "eva", "evamo", "evate", "evano"] },
+    ire: { present: ["o", "i", "e", "iamo", "ite", "ono"], imperfect: ["ivo", "ivi", "iva", "ivamo", "ivate", "ivano"] }
+  };
+  var futureEndings = ["ò", "ai", "à", "emo", "ete", "anno"];
+  var persons = {
+    essere: { present:["sono","sei","è","siamo","siete","sono"], imperfect:["ero","eri","era","eravamo","eravate","erano"], futureStem:"sar", past:"stato", auxiliary:"essere" },
+    avere: { present:["ho","hai","ha","abbiamo","avete","hanno"], imperfect:["avevo","avevi","aveva","avevamo","avevate","avevano"], futureStem:"avr", past:"avuto", auxiliary:"avere" },
+    andare: { present:["vado","vai","va","andiamo","andate","vanno"], futureStem:"andr", past:"andato", auxiliary:"essere" },
+    fare: { present:["faccio","fai","fa","facciamo","fate","fanno"], imperfect:["facevo","facevi","faceva","facevamo","facevate","facevano"], futureStem:"far", past:"fatto", auxiliary:"avere" },
+    dire: { present:["dico","dici","dice","diciamo","dite","dicono"], imperfect:["dicevo","dicevi","diceva","dicevamo","dicevate","dicevano"], futureStem:"dir", past:"detto", auxiliary:"avere" },
+    venire: { present:["vengo","vieni","viene","veniamo","venite","vengono"], futureStem:"verr", past:"venuto", auxiliary:"essere" },
+    potere: { present:["posso","puoi","può","possiamo","potete","possono"], futureStem:"potr", past:"potuto", auxiliary:"avere" },
+    volere: { present:["voglio","vuoi","vuole","vogliamo","volete","vogliono"], futureStem:"vorr", past:"voluto", auxiliary:"avere" },
+    dovere: { present:["devo","devi","deve","dobbiamo","dovete","devono"], futureStem:"dovr", past:"dovuto", auxiliary:"avere" },
+    sapere: { present:["so","sai","sa","sappiamo","sapete","sanno"], futureStem:"sapr", past:"saputo", auxiliary:"avere" },
+    stare: { present:["sto","stai","sta","stiamo","state","stanno"], imperfect:["stavo","stavi","stava","stavamo","stavate","stavano"], futureStem:"star", past:"stato", auxiliary:"essere" },
+    uscire: { present:["esco","esci","esce","usciamo","uscite","escono"], futureStem:"uscir", past:"uscito", auxiliary:"essere" },
+    bere: { present:["bevo","bevi","beve","beviamo","bevete","bevono"], futureStem:"berr", past:"bevuto", auxiliary:"avere" },
+    dare: { present:["do","dai","dà","diamo","date","danno"], futureStem:"dar", past:"dato", auxiliary:"avere" },
+    rimanere: { present:["rimango","rimani","rimane","rimaniamo","rimanete","rimangono"], futureStem:"rimarr", past:"rimasto", auxiliary:"essere" },
+    prendere: { past:"preso", auxiliary:"avere" },
+    vedere: { past:"visto", auxiliary:"avere" },
+    mettere: { past:"messo", auxiliary:"avere" },
+    leggere: { past:"letto", auxiliary:"avere" },
+    scrivere: { past:"scritto", auxiliary:"avere" },
+    aprire: { past:"aperto", auxiliary:"avere" },
+    chiudere: { past:"chiuso", auxiliary:"avere" },
+    chiedere: { past:"chiesto", auxiliary:"avere" },
+    rispondere: { past:"risposto", auxiliary:"avere" },
+    vivere: { past:"vissuto", auxiliary:"avere" },
+    nascere: { past:"nato", auxiliary:"essere" },
+    morire: { past:"morto", auxiliary:"essere" },
+    correre: { past:"corso", auxiliary:"avere" },
+    scegliere: { past:"scelto", auxiliary:"avere" },
+    perdere: { past:"perso", auxiliary:"avere" }
+  };
+  var iscVerbs = ["capire", "finire", "preferire", "pulire", "spedire", "costruire", "restituire"];
+  var auxiliaryEssere = ["andare", "venire", "uscire", "entrare", "arrivare", "partire", "tornare", "restare", "rimanere", "nascere", "morire", "cadere", "diventare", "salire", "scendere"];
+  var auxiliaryPresent = {
+    avere: ["ho", "hai", "ha", "abbiamo", "avete", "hanno"],
+    essere: ["sono", "sei", "è", "siamo", "siete", "sono"]
+  };
+
+  function el(id) { return document.getElementById(id); }
+  var verbInput = el("verbInput");
+  var verbResult = el("verbResult");
+  var verbMessage = el("verbMessage");
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (c) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  function makeFuture(verb, override) {
+    var stem = override && override.futureStem;
+    if (!stem) {
+      if (/(ciare|giare)$/.test(verb)) {
+        stem = verb.slice(0, -5) + verb.slice(-5, -4) + "er";
+      } else if (/(care|gare)$/.test(verb)) {
+        stem = verb.slice(0, -3) + "her";
+      } else if (verb.slice(-4) === "iare") {
+        stem = verb.slice(0, -4) + "ier";
+      } else if (verb.slice(-3) === "are") {
+        stem = verb.slice(0, -3) + "er";
+      } else {
+        stem = verb.slice(0, -1);
+      }
+    }
+    return futureEndings.map(function (end) { return stem + end; });
+  }
+
+  function regularForms(verb) {
+    var ending = verb.slice(-3);
+    var base = verb.slice(0, -3);
+    var pattern = endings[ending];
+    if (!pattern) { return null; }
+    var present;
+    if (verb.slice(-4) === "iare") {
+      var iStem = verb.slice(0, -4);
+      present = [iStem + "io", iStem + "i", iStem + "ia", iStem + "iamo", iStem + "iate", iStem + "iano"];
+    } else {
+      present = pattern.present.map(function (end) { return base + end; });
+    }
+    if (ending === "ire" && iscVerbs.indexOf(verb) !== -1) {
+      present = [base + "isco", base + "isci", base + "isce", base + "iamo", base + "ite", base + "iscono"];
+    }
+    if (/(care|gare)$/.test(verb)) {
+      present[1] = base + "hi";
+      present[3] = base + "hiamo";
+    }
+    var imperfect = pattern.imperfect.map(function (end) { return base + end; });
+    var future = makeFuture(verb);
+    var participle = base + (ending === "are" ? "ato" : ending === "ere" ? "uto" : "ito");
+    var aux = verb.slice(-3) === "arsi" || auxiliaryEssere.indexOf(verb) !== -1 ? "essere" : "avere";
+    return { present:present, imperfect:imperfect, future:future, participle:participle, auxiliary:aux };
+  }
+
+  function getForms(input) {
+    var verb = input.trim().toLowerCase().replace(/\s+/g, "");
+    var reflexive = /(arsi|ersi|irsi)$/.test(verb);
+    var baseVerb = reflexive ? verb.slice(0, -2) + "e" : verb;
+    if (baseVerb.slice(-3) !== "are" && baseVerb.slice(-3) !== "ere" && baseVerb.slice(-3) !== "ire") {
+      return { error:"Enter an Italian infinitive ending in -are, -ere, or -ire (for example, parlare or svegliarsi)." };
+    }
+    var known = persons[baseVerb];
+    var forms = regularForms(baseVerb);
+    if (!forms) { return { error:"I couldn't identify that infinitive. Check its spelling and ending." }; }
+    if (known) {
+      forms.present = known.present || forms.present;
+      forms.imperfect = known.imperfect || forms.imperfect;
+      forms.future = makeFuture(baseVerb, known);
+      forms.participle = known.past || forms.participle;
+      forms.auxiliary = known.auxiliary || forms.auxiliary;
+    }
+    if (reflexive) {
+      forms.auxiliary = "essere";
+      var reflexivePronouns = ["mi", "ti", "si", "ci", "vi", "si"];
+      forms.present = forms.present.map(function (form, i) { return reflexivePronouns[i] + " " + form; });
+      forms.imperfect = forms.imperfect.map(function (form, i) { return reflexivePronouns[i] + " " + form; });
+      forms.future = forms.future.map(function (form, i) { return reflexivePronouns[i] + " " + form; });
+    }
+    forms.reflexive = reflexive;
+    forms.verb = verb;
+    return forms;
+  }
+
+  function pastForms(forms) {
+    var aux = auxiliaryPresent[forms.auxiliary];
+    var pronouns = forms.reflexive ? ["mi", "ti", "si", "ci", "vi", "si"] : ["", "", "", "", "", ""];
+    return aux.map(function (form, i) {
+      var participle = forms.participle;
+      if (forms.auxiliary === "essere") {
+        var stem = participle.slice(0, -1);
+        var end = i < 3 ? "o/a" : "i/e";
+        participle = stem + end;
+      }
+      return (pronouns[i] ? pronouns[i] + " " : "") + form + " " + participle;
+    });
+  }
+
+  function tenseCard(title, forms, addSpeak) {
+    var body = forms.map(function (form, i) {
+      return "<div class='form-line'><span class='person'>" + people[i] + "</span><span class='form'>" + escapeHtml(form) + "</span>" +
+        (addSpeak ? "<button type='button' data-say='" + escapeHtml(form) + "'>🔊</button>" : "") + "</div>";
+    }).join("");
+    return "<div class='tense'><h3>" + title + "</h3>" + body + "</div>";
+  }
+
+  function conjugate() {
+    var forms = getForms(verbInput.value);
+    if (forms.error) {
+      verbMessage.textContent = forms.error;
+      verbMessage.className = "note error";
+      verbResult.innerHTML = "";
+      return;
+    }
+    verbMessage.textContent = "Infinitive: " + forms.verb + " · Passato prossimo auxiliary: " + forms.auxiliary;
+    verbMessage.className = "note";
+    var cards = [
+      tenseCard("Present · presente", forms.present, false),
+      tenseCard("Past · passato prossimo", pastForms(forms), false),
+      tenseCard("Past habit/background · imperfetto", forms.imperfect, false),
+      tenseCard("Future · futuro semplice", forms.future, false)
+    ];
+    verbResult.innerHTML = "<div class='forms'>" + cards.join("") + "</div>";
+  }
+
+  el("conjugateBtn").addEventListener("click", conjugate);
+  verbInput.addEventListener("keydown", function (event) { if (event.key === "Enter") { conjugate(); } });
+
+  var units = ["zero","uno","due","tre","quattro","cinque","sei","sette","otto","nove"];
+  var teens = ["dieci","undici","dodici","tredici","quattordici","quindici","sedici","diciassette","diciotto","diciannove"];
+  var tensNames = ["","","venti","trenta","quaranta","cinquanta","sessanta","settanta","ottanta","novanta"];
+  function italianNumber(n) {
+    if (!Number.isInteger(n) || n < 0 || n > 999999) { return null; }
+    if (n < 10) { return units[n]; }
+    if (n < 20) { return teens[n - 10]; }
+    if (n < 100) {
+      var ten = Math.floor(n / 10);
+      var unit = n % 10;
+      var root = tensNames[ten];
+      if (unit === 1 || unit === 8) { root = root.slice(0, -1); }
+      if (unit === 3) { return root + "tré"; }
+      return root + (unit ? units[unit] : "");
+    }
+    if (n < 1000) {
+      var hundred = Math.floor(n / 100);
+      var remainder = n % 100;
+      var prefix = hundred === 1 ? "cento" : units[hundred] + "cento";
+      if (remainder === 8 || (remainder >= 80 && remainder < 90)) { prefix = prefix.slice(0, -1); }
+      return prefix + (remainder ? italianNumber(remainder) : "");
+    }
+    var thousand = Math.floor(n / 1000);
+    var rest = n % 1000;
+    var thousandWord = thousand === 1 ? "mille" : italianNumber(thousand).replace(/tré$/, "tre") + "mila";
+    return thousandWord + (rest ? italianNumber(rest) : "");
+  }
+
+  function renderNumber(number, target) {
+    var word = italianNumber(number);
+    if (word === null) { target.innerHTML = "<p class='error'>Enter a whole number from 0 to 999,999.</p>"; return; }
+    target.innerHTML = "<div class='number'><span><b>" + number.toLocaleString("en-US") + "</b> — " + escapeHtml(word) + "</span><button type='button' data-say='" + escapeHtml(word) + "'>🔊</button></div>";
+    wireSayButtons(target);
+  }
+
+  el("numberBtn").addEventListener("click", function () {
+    var value = Number(el("numberInput").value);
+    if (el("numberInput").value === "") { el("numberResult").innerHTML = "<p class='error'>Enter a number first.</p>"; return; }
+    renderNumber(value, el("numberResult"));
+  });
+  el("numberInput").addEventListener("keydown", function (event) { if (event.key === "Enter") { el("numberBtn").click(); } });
+
+  function fillNumberGrid(targetId, values) {
+    var target = el(targetId);
+    target.innerHTML = values.map(function (item) {
+      return "<div class='number'><span><b>" + item[0] + "</b> " + item[1] + "</span><button type='button' data-say='" + item[1] + "'>🔊</button></div>";
+    }).join("");
+    wireSayButtons(target);
+  }
+
+  function wireSayButtons(root) {
+    root.querySelectorAll("button[data-say]").forEach(function (button) {
+      button.addEventListener("click", function () { speak(button.getAttribute("data-say")); });
+    });
+  }
+
+  fillNumberGrid("basicNumbers", Array.from({ length: 21 }, function (_, n) { return [n, italianNumber(n)]; }));
+  fillNumberGrid("tensNumbers", [20,30,40,50,60,70,80,90,100].map(function (n) { return [n, n === 100 ? "cento" : italianNumber(n)]; }));
+
+  var voiceSelect = el("voiceSelect");
+  var voiceStorageKey = "italian-tutor-lesson-voice";
+  var allVoices = [];
+  var preferred = ["alice", "elsa", "luca", "isabella", "google italiano", "microsoft elsa", "italian"];
+  function isItalianVoice(voice) { return voice.lang && voice.lang.toLowerCase().indexOf("it") === 0; }
+  function voiceScore(voice) {
+    var name = (voice.name || "").toLowerCase();
+    for (var i = 0; i < preferred.length; i++) { if (name.indexOf(preferred[i]) !== -1) { return 100 - i; } }
+    return voice.localService ? 10 : 1;
+  }
+  function refreshVoiceList() {
+    if (!("speechSynthesis" in window)) { return; }
+    allVoices = window.speechSynthesis.getVoices() || allVoices;
+    var saved = "";
+    try { saved = localStorage.getItem(voiceStorageKey) || ""; } catch (e) {}
+    var italian = allVoices.filter(isItalianVoice).sort(function (a,b) { return voiceScore(b) - voiceScore(a); });
+    voiceSelect.innerHTML = "";
+    var auto = document.createElement("option"); auto.value = ""; auto.textContent = "Automatic Italian voice"; voiceSelect.appendChild(auto);
+    italian.forEach(function (voice) {
+      var option = document.createElement("option");
+      option.value = voice.voiceURI || voice.name;
+      option.textContent = voice.name + " (" + voice.lang + ")";
+      voiceSelect.appendChild(option);
+    });
+    var savedAvailable = italian.some(function (voice) { return (voice.voiceURI || voice.name) === saved; });
+    voiceSelect.value = savedAvailable ? saved : (italian.length ? (italian[0].voiceURI || italian[0].name) : "");
+  }
+  function speak(text) {
+    if (!("speechSynthesis" in window)) { return; }
+    var attempts = 0;
+    function speakReady() {
+      allVoices = window.speechSynthesis.getVoices() || allVoices;
+      if (!allVoices.length && attempts < 15) { attempts++; window.setTimeout(speakReady, 150); return; }
+      window.speechSynthesis.cancel();
+      var utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "it-IT";
+      utterance.rate = 0.95;
+      var chosen = null;
+      if (voiceSelect.value) {
+        chosen = allVoices.filter(function (voice) { return isItalianVoice(voice) && (voice.voiceURI || voice.name) === voiceSelect.value; })[0];
+      }
+      if (!chosen) { chosen = allVoices.filter(isItalianVoice).sort(function (a,b) { return voiceScore(b)-voiceScore(a); })[0]; }
+      if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
+      utterance.onerror = function () { el("voiceStatus").textContent = "Speech failed; select another speaker or check device speech settings."; };
+      utterance.onstart = function () { el("voiceStatus").textContent = ""; };
+      window.speechSynthesis.speak(utterance);
+    }
+    speakReady();
+  }
+  refreshVoiceList();
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = refreshVoiceList;
+    window.setTimeout(refreshVoiceList, 300);
+  }
+  voiceSelect.addEventListener("change", function () {
+    try { localStorage.setItem(voiceStorageKey, voiceSelect.value); } catch (e) {}
+    el("voiceStatus").textContent = "Selected speaker. Tap Test speaker to check it.";
+  });
+  el("testVoice").addEventListener("click", function () { speak("Ciao! Questa è una prova della pronuncia italiana."); });
+  verbResult.addEventListener("click", function (event) {
+    var button = event.target.closest("button[data-say]");
+    if (button) { speak(button.getAttribute("data-say")); }
+  });
+})();
+</script>
+</body>
+</html>

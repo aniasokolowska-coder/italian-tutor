@@ -295,6 +295,7 @@
     <p>Interactive courses from A1 to C1. Choose a level, then tap any word to hear it pronounced.</p>
     <div class="top-links">
       <a class="btn primary" href="index.html">⇄ Open Translator</a>
+      <a class="btn" href="cheatsheet.html">📖 Verb & number cheat sheets</a>
       <button id="resetProgress">↺ Reset Progress</button>
     </div>
   </header>
@@ -306,8 +307,10 @@
   </div>
 
   <div class="voice-bar">
-    <label for="voiceSelect">Italian voice:</label>
+    <label for="voiceSelect">Italian speaker:</label>
     <select id="voiceSelect"></select>
+    <button id="testVoice" type="button">🔊 Test speaker</button>
+    <span id="voiceStatus" class="settings-status" aria-live="polite"></span>
     <button id="toggleSettings" type="button">⚙️ AI feedback</button>
   </div>
 
@@ -377,17 +380,15 @@
 
   function setStatus(msg) { statusEl.textContent = msg || ""; }
 
-  /* ---------- Voice handling (shared logic with translator) ---------- */
   var allVoices = [];
-  var PREFERRED_IT = ["alice", "elsa", "luca", "isabella", "google italiano", "microsoft elsa", "microsoft cosimo", "microsoft diego", "microsoft isabella", "italian"];
+  var voiceStorageKey = "italian-tutor-lesson-voice";
+  var PREFERRED_IT = ["alice", "elsa", "luca", "isabella", "google italiano", "microsoft elsa", "microsoft cosimo", "microsoft diego", "italian"];
 
-  function loadVoices() {
-    if (!("speechSynthesis" in window)) { return; }
-    allVoices = window.speechSynthesis.getVoices() || [];
-    populateVoices();
+  function voiceMatchesItalian(voice) {
+    return voice.lang && voice.lang.toLowerCase().indexOf("it") === 0;
   }
 
-  function scoreIt(voice) {
+  function scoreItalianVoice(voice) {
     var name = (voice.name || "").toLowerCase();
     for (var i = 0; i < PREFERRED_IT.length; i++) {
       if (name.indexOf(PREFERRED_IT[i]) !== -1) { return 100 - i; }
@@ -395,51 +396,85 @@
     return voice.localService ? 10 : 1;
   }
 
-  function populateVoices() {
-    var matches = allVoices.filter(function (v) {
-      return v.lang && v.lang.toLowerCase().indexOf("it") === 0;
-    });
-    matches.sort(function (a, b) { return scoreIt(b) - scoreIt(a); });
-    voiceSelect.innerHTML = "";
-    if (!matches.length) {
-      var o = document.createElement("option");
-      o.textContent = "No Italian voices found";
-      o.value = "";
-      voiceSelect.appendChild(o);
-      return;
-    }
-    matches.forEach(function (v) {
-      var o = document.createElement("option");
-      o.value = v.name;
-      o.textContent = v.name + " (" + v.lang + ")";
-      voiceSelect.appendChild(o);
-    });
+  function loadVoices() {
+    if (!("speechSynthesis" in window)) { return; }
+    allVoices = window.speechSynthesis.getVoices() || [];
+    populateVoices();
   }
 
-  function speak(text) {
-    if (!("speechSynthesis" in window)) { setStatus("Speech not supported in this browser."); return; }
-    window.speechSynthesis.cancel();
-    var utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "it-IT";
-    utter.rate = 0.95;
+  function populateVoices() {
+    var saved = "";
+    try { saved = localStorage.getItem(voiceStorageKey) || ""; } catch (e) {}
+    var matches = allVoices.filter(voiceMatchesItalian);
+    matches.sort(function (a, b) { return scoreItalianVoice(b) - scoreItalianVoice(a); });
+    voiceSelect.innerHTML = "";
 
-    var chosen = null;
-    if (voiceSelect.value) {
-      chosen = allVoices.filter(function (v) { return v.name === voiceSelect.value; })[0];
+    var automatic = document.createElement("option");
+    automatic.value = "";
+    automatic.textContent = "Automatic Italian voice";
+    voiceSelect.appendChild(automatic);
+
+    matches.forEach(function (voice) {
+      var option = document.createElement("option");
+      option.value = voice.voiceURI || voice.name;
+      option.textContent = voice.name + " (" + voice.lang + ")";
+      voiceSelect.appendChild(option);
+    });
+
+    var savedExists = matches.some(function (voice) { return (voice.voiceURI || voice.name) === saved; });
+    if (savedExists) {
+      voiceSelect.value = saved;
+    } else {
+      voiceSelect.value = matches.length ? (matches[0].voiceURI || matches[0].name) : "";
     }
-    if (!chosen) {
-      chosen = allVoices.filter(function (v) { return v.lang && v.lang.toLowerCase().indexOf("it") === 0; })
-        .sort(function (a, b) { return scoreIt(b) - scoreIt(a); })[0];
+  }
+
+  function speak(text, rate) {
+    if (!("speechSynthesis" in window)) { setStatus("Speech playback is not supported in this browser."); return; }
+    var attempts = 0;
+    function speakWhenReady() {
+      allVoices = window.speechSynthesis.getVoices() || allVoices;
+      if (!allVoices.length && attempts < 15) {
+        attempts++;
+        window.setTimeout(speakWhenReady, 150);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      var utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "it-IT";
+      utterance.rate = rate || 0.95;
+      utterance.pitch = 1;
+      var chosen = null;
+      if (voiceSelect.value) {
+        chosen = allVoices.filter(function (voice) {
+          return (voice.voiceURI || voice.name) === voiceSelect.value && voiceMatchesItalian(voice);
+        })[0];
+      }
+      if (!chosen) {
+        chosen = allVoices.filter(voiceMatchesItalian).sort(function (a, b) {
+          return scoreItalianVoice(b) - scoreItalianVoice(a);
+        })[0];
+      }
+      if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
+      utterance.onerror = function () { setStatus("Could not play speech. Try another Italian speaker."); };
+      utterance.onstart = function () { setStatus(""); };
+      window.speechSynthesis.speak(utterance);
     }
-    if (chosen) { utter.voice = chosen; utter.lang = chosen.lang; }
-    window.speechSynthesis.speak(utter);
+    speakWhenReady();
   }
 
   if ("speechSynthesis" in window) {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
+    window.setTimeout(loadVoices, 300);
   }
-  voiceSelect.addEventListener("change", function () { speak("Ciao, questa è la voce selezionata."); });
+  voiceSelect.addEventListener("change", function () {
+    try { localStorage.setItem(voiceStorageKey, voiceSelect.value); } catch (e) {}
+    setStatus(voiceSelect.value ? "Italian speaker selected. Tap Test speaker to listen." : "Using browser's automatic Italian voice.");
+  });
+  el("testVoice").addEventListener("click", function () {
+    speak("Ciao! Questa è una prova della pronuncia italiana.", 1);
+  });
 
   /* ---------- Rendering ---------- */
   function renderTabs() {

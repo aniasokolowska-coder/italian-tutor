@@ -2,8 +2,9 @@
 
 Beginner-friendly tools in one place:
 
-1. **English ⇄ Italian Translator** (`index.html`) — a self-contained web app that translates spoken or written English to Italian and Italian to English.
-2. **Interactive Lesson Plan** (`lessons.html` + `lessons-data.js`) — three 8-week courses (Beginner A1, Intermediate B1, Advanced C1) as clickable weekly tabs. Every week includes a listenable dialogue, vocabulary with translations, grammar, and dedicated **speaking**, **writing**, and **describing** practice, plus exercises you can answer by typing or speaking (with pronunciation of the correct answer). Progress and answers are saved in your browser.
+1. **English ⇄ Italian Translator** (`index.html`) — a self-contained web app that translates spoken or written English to Italian and Italian to English, with selectable English and Italian speech voices.
+2. **Interactive Lesson Plan** (`lessons.html` + `lessons-data.js`) — three 8-week courses (Beginner A1, Intermediate B1, Advanced C1) as clickable weekly tabs. Every week includes a listenable dialogue, vocabulary with translations, grammar, and dedicated **speaking**, **writing**, and **describing** practice, plus exercises you can answer by typing or speaking. Progress and answers are saved in your browser.
+3. **Verb & Number Cheat Sheets** (`cheatsheet.html`) — conjugate Italian infinitives in the present, passato prossimo, imperfetto, and future, plus a spoken number converter and number reference.
 
 ### Checking your speaking & writing
 
@@ -21,11 +22,19 @@ The key is stored **only in your browser's localStorage** — it is never writte
 ### Dialogue translation practice
 
 Each dialogue shows the **English** first, with the Italian hidden. Say or write the Italian yourself, then click **Show Italian** to check. Use **Practice mode** to toggle the Italian on and off.
-3. **Lesson Plan (Markdown)** (`italian-lesson-plan.md`) — the same 8-week A1 course as a plain document.
+
+The original plan is also available as `italian-lesson-plan.md`.
+
+## Verb & number cheat sheets
+
+Open `cheatsheet.html` from the translator or lesson page. Enter an Italian infinitive such as `parlare`, `essere`, or `svegliarsi` to see the present, passato prossimo, imperfetto, and future forms. The page includes many common irregular verbs and handles regular -are/-ere/-ire patterns.
+
+The numbers section gives a spoken converter for 0–999,999, quick-reference grids, and spelling rules. Use **🔊 Test speaker** to choose and verify an Italian text-to-speech voice.
 
 ## Translator Features
 
 - Translate **English → Italian** and **Italian → English**
+- Select an Italian speaker; the selector is retained when swapping directions
 - **Type** text or use the **microphone** (speech-to-text)
 - **Listen** to the source and translation with text-to-speech
 - Swap languages with one click

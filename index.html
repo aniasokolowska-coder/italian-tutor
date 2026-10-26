@@ -119,6 +119,7 @@
     font-size: 0.9rem;
     max-width: 320px;
   }
+  .top-links { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
   .nav-link {
     display: inline-block;
     background: var(--accent-2);
@@ -139,9 +140,10 @@
   <header>
     <h1>English ⇄ Italian Translator</h1>
     <p>Type or speak in English or Italian and get an instant translation.</p>
-    <p style="margin-top:14px">
-      <a class="nav-link" href="lessons.html">📚 Open the lesson plan (A1–C1) →</a>
-    </p>
+    <div class="top-links">
+      <a class="nav-link" href="lessons.html">📚 Lessons (A1–C1)</a>
+      <a class="nav-link" href="cheatsheet.html">📖 Verb & number cheat sheets</a>
+    </div>
   </header>
 
   <div class="card">
@@ -178,7 +180,7 @@
     </div>
 
     <div class="voice-picker">
-      <label for="voiceSelect">Voice:</label>
+      <label for="voiceSelect">Italian speaker:</label>
       <select id="voiceSelect"></select>
       <button id="testVoice" type="button">Test</button>
     </div>
@@ -263,16 +265,9 @@
 
   var voiceSelect = el("voiceSelect");
   var allVoices = [];
-
-  var PREFERRED_IT = [
-    "alice", "elsa", "luca", "isabella", "google italiano",
-    "microsoft elsa", "microsoft cosimo", "microsoft diego",
-    "microsoft isabella", "italian"
-  ];
-  var PREFERRED_EN = [
-    "samantha", "google us english", "microsoft aria",
-    "microsoft jenny", "microsoft guy", "alex", "daniel"
-  ];
+  var voiceStorageKey = "italian-tutor-voice-";
+  var PREFERRED_IT = ["alice", "elsa", "luca", "isabella", "google italiano", "microsoft elsa", "microsoft cosimo", "microsoft diego", "italian"];
+  var PREFERRED_EN = ["samantha", "google us english", "microsoft aria", "microsoft jenny", "alex", "daniel"];
 
   function loadVoices() {
     if (!("speechSynthesis" in window)) { return; }
@@ -286,80 +281,84 @@
 
   function scoreVoice(voice, prefix) {
     var name = (voice.name || "").toLowerCase();
-    var list = prefix === "it" ? PREFERRED_IT : PREFERRED_EN;
-    for (var i = 0; i < list.length; i++) {
-      if (name.indexOf(list[i]) !== -1) { return 100 - i; }
+    var preferred = prefix === "it" ? PREFERRED_IT : PREFERRED_EN;
+    for (var i = 0; i < preferred.length; i++) {
+      if (name.indexOf(preferred[i]) !== -1) { return 100 - i; }
     }
-    if (voice.localService) { return 10; }
-    return 1;
-  }
-
-  function bestVoice(prefix) {
-    var candidates = allVoices.filter(function (v) { return voiceMatches(v, prefix); });
-    if (!candidates.length) { return null; }
-    candidates.sort(function (a, b) { return scoreVoice(b, prefix) - scoreVoice(a, prefix); });
-    return candidates[0];
+    return voice.localService ? 10 : 1;
   }
 
   function populateVoiceList() {
     if (!voiceSelect) { return; }
-    var prefix = state.to === "it" ? "it" : "en";
-    var matches = allVoices.filter(function (v) { return voiceMatches(v, prefix); });
+    var prefix = "it";
+    var saved = "";
+    try { saved = localStorage.getItem(voiceStorageKey + prefix) || ""; } catch (e) {}
+    var matches = allVoices.filter(function (voice) { return voiceMatches(voice, prefix); });
     matches.sort(function (a, b) { return scoreVoice(b, prefix) - scoreVoice(a, prefix); });
-
     voiceSelect.innerHTML = "";
-    if (!matches.length) {
-      var opt = document.createElement("option");
-      opt.textContent = "No " + (prefix === "it" ? "Italian" : "English") + " voices found";
-      opt.value = "";
-      voiceSelect.appendChild(opt);
-      return;
-    }
-    matches.forEach(function (v) {
-      var opt = document.createElement("option");
-      opt.value = v.name;
-      opt.textContent = v.name + " (" + v.lang + ")";
-      voiceSelect.appendChild(opt);
+
+    var automatic = document.createElement("option");
+    automatic.value = "";
+    automatic.textContent = "Automatic " + (prefix === "it" ? "Italian" : "English") + " voice";
+    voiceSelect.appendChild(automatic);
+
+    matches.forEach(function (voice) {
+      var option = document.createElement("option");
+      option.value = voice.voiceURI || voice.name;
+      option.textContent = voice.name + " (" + voice.lang + ")";
+      voiceSelect.appendChild(option);
     });
+
+    var savedExists = matches.some(function (voice) { return (voice.voiceURI || voice.name) === saved; });
+    if (savedExists) {
+      voiceSelect.value = saved;
+    } else {
+      var preferredVoice = matches[0];
+      voiceSelect.value = preferredVoice ? (preferredVoice.voiceURI || preferredVoice.name) : "";
+    }
   }
 
-  function getSelectedVoice(prefix) {
-    if (voiceSelect && voiceSelect.value) {
-      var chosen = allVoices.filter(function (v) { return v.name === voiceSelect.value; })[0];
-      if (chosen) { return chosen; }
+  function selectedVoice(prefix) {
+    if (voiceSelect && prefix === "it" && voiceSelect.value) {
+      return allVoices.filter(function (voice) {
+        return (voice.voiceURI || voice.name) === voiceSelect.value && voiceMatches(voice, prefix);
+      })[0] || null;
     }
-    return bestVoice(prefix);
+    var matches = allVoices.filter(function (voice) { return voiceMatches(voice, prefix); });
+    matches.sort(function (a, b) { return scoreVoice(b, prefix) - scoreVoice(a, prefix); });
+    return matches[0] || null;
   }
 
   function speak(text, langCode, rate) {
-    if (!text) {
-      setStatus("Nothing to pronounce yet.", true);
-      return;
-    }
-    if (!("speechSynthesis" in window)) {
-      setStatus("Speech playback is not supported in this browser.", true);
-      return;
-    }
-    var prefix = langCode.slice(0, 2).toLowerCase();
-    window.speechSynthesis.cancel();
-    var utter = new SpeechSynthesisUtterance(text);
-    utter.lang = langCode;
-    utter.rate = rate || 1;
-    utter.pitch = 1;
+    if (!text) { setStatus("Nothing to pronounce yet.", true); return; }
+    if (!("speechSynthesis" in window)) { setStatus("Speech playback is not supported in this browser.", true); return; }
 
-    var voice = getSelectedVoice(prefix);
-    if (voice) {
-      utter.voice = voice;
-      utter.lang = voice.lang;
+    var attempts = 0;
+    function speakWhenReady() {
+      allVoices = window.speechSynthesis.getVoices() || allVoices;
+      if (!allVoices.length && attempts < 15) {
+        attempts++;
+        window.setTimeout(speakWhenReady, 150);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      var utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = langCode;
+      utterance.rate = rate || 1;
+      utterance.pitch = 1;
+      var voice = selectedVoice(langCode.slice(0, 2).toLowerCase());
+      if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
+      utterance.onerror = function () { setStatus("Could not play speech. Try another voice in the selector.", true); };
+      utterance.onstart = function () { setStatus(""); };
+      window.speechSynthesis.speak(utterance);
     }
-
-    window.speechSynthesis.speak(utter);
+    speakWhenReady();
   }
 
   if ("speechSynthesis" in window) {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
-    if (window.speechSynthesis.getVoices().length) { loadVoices(); }
+    window.setTimeout(loadVoices, 300);
   }
 
   function startListening(button, langCode) {
@@ -437,20 +436,13 @@
     });
   });
 
-  if (voiceSelect) {
-    voiceSelect.addEventListener("change", function () {
-      var sample = state.to === "it"
-        ? "Ciao, questa è la voce italiana selezionata."
-        : "Hello, this is the selected English voice.";
-      speak(sample, langs[state.to].speech, 1);
-    });
-  }
+  voiceSelect.addEventListener("change", function () {
+    try { localStorage.setItem(voiceStorageKey + "it", voiceSelect.value); } catch (e) {}
+    setStatus(voiceSelect.value ? "Italian speaker selected. Press Test to hear it." : "Using your browser's automatic Italian voice.");
+  });
 
   el("testVoice").addEventListener("click", function () {
-    var sample = state.to === "it"
-      ? "Ciao! Questa è una prova della pronuncia italiana."
-      : "Hello! This is a test of the English voice.";
-    speak(sample, langs[state.to].speech, 1);
+    speak("Ciao! Questa è una prova della pronuncia italiana.", "it-IT", 1);
   });
 
   sourceText.addEventListener("keydown", function (event) {
