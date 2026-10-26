@@ -518,6 +518,9 @@
         "<div class='exercise-actions'>" +
         "<button class='reveal' data-reveal='" + id + "'>Show answer</button>" +
         "<button class='pronounce' data-say=\"" + spoken + "\" title='Hear the correct answer'>🔊 Pronounce</button>" +
+        "<button class='pronounce' data-say=\"" + spoken + "\" data-rate='0.65'>Slow model answer</button>" +
+        "<button type='button' data-read-input='" + inputId + "'>Hear my answer</button>" +
+        "<button type='button' data-read-input='" + inputId + "' data-rate='0.65'>My answer slowly</button>" +
         "</div>" +
         "<div class='answer' id='" + id + "'>" + ex.a + "</div></div>";
     }).join("");
@@ -540,6 +543,8 @@
         "<button class='mic' data-mic-text='" + key + "' title='Dictate your answer'>🎤 Dictate</button>" +
         "<button class='check' data-check=\"" + key + "\" data-kind='" + kind + "' data-prompt=\"" + esc(prompt) + "\">✓ Check my answer</button>" +
         "<button class='save-answer' data-save=\"" + key + "\">💾 Save</button>" +
+        "<button type='button' data-read-answer='" + key + "'>Hear my answer</button>" +
+        "<button type='button' data-read-answer='" + key + "' data-rate='0.65'>My answer slowly</button>" +
         "<button class='copy-ai' data-copy=\"" + key + "\" data-prompt=\"" + esc(prompt) + "\">📋 Copy for AI</button>" +
         "</div>" +
         "<div class='feedback' data-feedback=\"" + key + "\" hidden></div>" +
@@ -673,7 +678,19 @@
       });
     });
     panelEl.querySelectorAll("button.pronounce[data-say]").forEach(function (btn) {
-      btn.addEventListener("click", function () { speak(btn.getAttribute("data-say")); });
+      btn.addEventListener("click", function () { speak(btn.getAttribute("data-say"), Number(btn.getAttribute("data-rate")) || 0.95); });
+    });
+    panelEl.querySelectorAll("[data-read-input], [data-read-answer]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var inputId = btn.getAttribute("data-read-input");
+        var input = inputId ? document.getElementById(inputId) : panelEl.querySelector("[data-answer='" + btn.getAttribute("data-read-answer") + "']");
+        var text = input ? input.value.trim() : "";
+        if (!text) {
+          el("voiceStatus").textContent = "Type or dictate an Italian answer first.";
+          return;
+        }
+        speak(text, Number(btn.getAttribute("data-rate")) || 0.95);
+      });
     });
     panelEl.querySelectorAll("button.dialogue-play[data-say]").forEach(function (btn) {
       btn.addEventListener("click", function () { speak(btn.getAttribute("data-say")); });

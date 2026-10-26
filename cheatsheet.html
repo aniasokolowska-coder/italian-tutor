@@ -36,7 +36,7 @@
   .forms { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; margin-top:14px; }
   .tense { background:#141936; border-radius:12px; padding:12px; }
   .tense h3 { margin:0 0 8px; }
-  .form-line { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+  .form-line { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.05); }
   .form-line:last-child { border-bottom:0; }
   .form-line .person { color:var(--muted); font-size:.85rem; }
   .form-line .form { font-weight:650; }
@@ -245,10 +245,16 @@
     });
   }
 
-  function tenseCard(title, forms, addSpeak) {
+  function spokenForm(form) {
+    var masculine = form.replace(/o\/a\b/g, "o").replace(/i\/e\b/g, "i");
+    var feminine = form.replace(/o\/a\b/g, "a").replace(/i\/e\b/g, "e");
+    return masculine === feminine ? form : masculine + ". " + feminine + ".";
+  }
+
+  function tenseCard(title, forms) {
     var body = forms.map(function (form, i) {
       return "<div class='form-line'><span class='person'>" + people[i] + "</span><span class='form'>" + escapeHtml(form) + "</span>" +
-        (addSpeak ? "<button type='button' data-say='" + escapeHtml(form) + "'>🔊</button>" : "") + "</div>";
+        "<button type='button' aria-label='Pronounce " + escapeHtml(people[i] + " " + form) + "' data-say='" + escapeHtml(spokenForm(form)) + "'>Listen</button></div>";
     }).join("");
     return "<div class='tense'><h3>" + title + "</h3>" + body + "</div>";
   }
@@ -264,12 +270,14 @@
     verbMessage.textContent = "Infinitive: " + forms.verb + " · Passato prossimo auxiliary: " + forms.auxiliary;
     verbMessage.className = "note";
     var cards = [
-      tenseCard("Present · presente", forms.present, false),
-      tenseCard("Past · passato prossimo", pastForms(forms), false),
-      tenseCard("Past habit/background · imperfetto", forms.imperfect, false),
-      tenseCard("Future · futuro semplice", forms.future, false)
+      tenseCard("Present · presente", forms.present),
+      tenseCard("Past · passato prossimo", pastForms(forms)),
+      tenseCard("Past habit/background · imperfetto", forms.imperfect),
+      tenseCard("Future · futuro semplice", forms.future)
     ];
-    verbResult.innerHTML = "<div class='forms'>" + cards.join("") + "</div>";
+    verbResult.innerHTML = "<button type='button' data-say='" + escapeHtml(forms.verb) + "'>Listen to infinitive</button>" +
+      "<p class='note'>Listen beside any form to hear it in Italian. Forms such as andato/a are spoken as both masculine and feminine.</p>" +
+      "<div class='forms'>" + cards.join("") + "</div>";
   }
 
   el("conjugateBtn").addEventListener("click", conjugate);
