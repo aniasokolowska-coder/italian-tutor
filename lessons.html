@@ -431,36 +431,28 @@
 
   function speak(text, rate) {
     if (!("speechSynthesis" in window)) { setStatus("Speech playback is not supported in this browser."); return; }
-    var attempts = 0;
-    function speakWhenReady() {
-      allVoices = window.speechSynthesis.getVoices() || allVoices;
-      if (!allVoices.length && attempts < 15) {
-        attempts++;
-        window.setTimeout(speakWhenReady, 150);
-        return;
-      }
-      window.speechSynthesis.cancel();
-      var utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "it-IT";
-      utterance.rate = rate || 0.95;
-      utterance.pitch = 1;
-      var chosen = null;
-      if (voiceSelect.value) {
-        chosen = allVoices.filter(function (voice) {
-          return (voice.voiceURI || voice.name) === voiceSelect.value && voiceMatchesItalian(voice);
-        })[0];
-      }
-      if (!chosen) {
-        chosen = allVoices.filter(voiceMatchesItalian).sort(function (a, b) {
-          return scoreItalianVoice(b) - scoreItalianVoice(a);
-        })[0];
-      }
-      if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
-      utterance.onerror = function () { setStatus("Could not play speech. Try another Italian speaker."); };
-      utterance.onstart = function () { setStatus(""); };
-      window.speechSynthesis.speak(utterance);
+    allVoices = window.speechSynthesis.getVoices() || allVoices;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "it-IT";
+    utterance.rate = rate || 0.95;
+    utterance.pitch = 1;
+    var chosen = null;
+    if (voiceSelect.value) {
+      chosen = allVoices.filter(function (voice) {
+        return (voice.voiceURI || voice.name) === voiceSelect.value && voiceMatchesItalian(voice);
+      })[0];
     }
-    speakWhenReady();
+    if (!chosen) {
+      chosen = allVoices.filter(voiceMatchesItalian).sort(function (a, b) {
+        return scoreItalianVoice(b) - scoreItalianVoice(a);
+      })[0];
+    }
+    if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
+    utterance.onerror = function () { setStatus("Could not play speech. Check iPhone media volume or try Automatic Italian voice."); };
+    utterance.onstart = function () { setStatus(""); };
+    window.speechSynthesis.speak(utterance);
   }
 
   if ("speechSynthesis" in window) {

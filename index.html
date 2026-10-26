@@ -333,26 +333,18 @@
     if (!text) { setStatus("Nothing to pronounce yet.", true); return; }
     if (!("speechSynthesis" in window)) { setStatus("Speech playback is not supported in this browser.", true); return; }
 
-    var attempts = 0;
-    function speakWhenReady() {
-      allVoices = window.speechSynthesis.getVoices() || allVoices;
-      if (!allVoices.length && attempts < 15) {
-        attempts++;
-        window.setTimeout(speakWhenReady, 150);
-        return;
-      }
-      window.speechSynthesis.cancel();
-      var utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = langCode;
-      utterance.rate = rate || 1;
-      utterance.pitch = 1;
-      var voice = selectedVoice(langCode.slice(0, 2).toLowerCase());
-      if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
-      utterance.onerror = function () { setStatus("Could not play speech. Try another voice in the selector.", true); };
-      utterance.onstart = function () { setStatus(""); };
-      window.speechSynthesis.speak(utterance);
-    }
-    speakWhenReady();
+    allVoices = window.speechSynthesis.getVoices() || allVoices;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langCode;
+    utterance.rate = rate || 1;
+    utterance.pitch = 1;
+    var voice = selectedVoice(langCode.slice(0, 2).toLowerCase());
+    if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
+    utterance.onerror = function () { setStatus("Could not play speech. Check iPhone media volume or try Automatic Italian voice.", true); };
+    utterance.onstart = function () { setStatus(""); };
+    window.speechSynthesis.speak(utterance);
   }
 
   if ("speechSynthesis" in window) {

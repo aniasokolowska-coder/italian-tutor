@@ -363,25 +363,21 @@
   }
   function speak(text) {
     if (!("speechSynthesis" in window)) { return; }
-    var attempts = 0;
-    function speakReady() {
-      allVoices = window.speechSynthesis.getVoices() || allVoices;
-      if (!allVoices.length && attempts < 15) { attempts++; window.setTimeout(speakReady, 150); return; }
-      window.speechSynthesis.cancel();
-      var utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "it-IT";
-      utterance.rate = 0.95;
-      var chosen = null;
-      if (voiceSelect.value) {
-        chosen = allVoices.filter(function (voice) { return isItalianVoice(voice) && (voice.voiceURI || voice.name) === voiceSelect.value; })[0];
-      }
-      if (!chosen) { chosen = allVoices.filter(isItalianVoice).sort(function (a,b) { return voiceScore(b)-voiceScore(a); })[0]; }
-      if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
-      utterance.onerror = function () { el("voiceStatus").textContent = "Speech failed; select another speaker or check device speech settings."; };
-      utterance.onstart = function () { el("voiceStatus").textContent = ""; };
-      window.speechSynthesis.speak(utterance);
+    allVoices = window.speechSynthesis.getVoices() || allVoices;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "it-IT";
+    utterance.rate = 0.95;
+    var chosen = null;
+    if (voiceSelect.value) {
+      chosen = allVoices.filter(function (voice) { return isItalianVoice(voice) && (voice.voiceURI || voice.name) === voiceSelect.value; })[0];
     }
-    speakReady();
+    if (!chosen) { chosen = allVoices.filter(isItalianVoice).sort(function (a,b) { return voiceScore(b)-voiceScore(a); })[0]; }
+    if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
+    utterance.onerror = function () { el("voiceStatus").textContent = "Speech failed; check iPhone media volume or use Automatic Italian voice."; };
+    utterance.onstart = function () { el("voiceStatus").textContent = ""; };
+    window.speechSynthesis.speak(utterance);
   }
   refreshVoiceList();
   if ("speechSynthesis" in window) {
