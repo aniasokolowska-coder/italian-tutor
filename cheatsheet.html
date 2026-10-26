@@ -337,6 +337,7 @@
   var voiceSelect = el("voiceSelect");
   var voiceStorageKey = "italian-tutor-lesson-voice";
   var allVoices = [];
+  var activeUtterance = null;
   var preferred = ["alice", "elsa", "luca", "isabella", "google italiano", "microsoft elsa", "italian"];
   function isItalianVoice(voice) { return voice.lang && voice.lang.toLowerCase().indexOf("it") === 0; }
   function voiceScore(voice) {
@@ -359,13 +360,14 @@
       voiceSelect.appendChild(option);
     });
     var savedAvailable = italian.some(function (voice) { return (voice.voiceURI || voice.name) === saved; });
-    voiceSelect.value = savedAvailable ? saved : (italian.length ? (italian[0].voiceURI || italian[0].name) : "");
+    voiceSelect.value = savedAvailable ? saved : "";
   }
   function speak(text) {
     if (!("speechSynthesis" in window)) { return; }
-    allVoices = window.speechSynthesis.getVoices() || allVoices;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.resume();
+    var synthesis = window.speechSynthesis;
+    allVoices = synthesis.getVoices() || allVoices;
+    activeUtterance = null;
+    if (synthesis.speaking || synthesis.pending) { synthesis.cancel(); }
     var utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "it-IT";
     utterance.rate = 0.95;
@@ -373,11 +375,26 @@
     if (voiceSelect.value) {
       chosen = allVoices.filter(function (voice) { return isItalianVoice(voice) && (voice.voiceURI || voice.name) === voiceSelect.value; })[0];
     }
-    if (!chosen) { chosen = allVoices.filter(isItalianVoice).sort(function (a,b) { return voiceScore(b)-voiceScore(a); })[0]; }
     if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
-    utterance.onerror = function () { el("voiceStatus").textContent = "Speech failed; check iPhone media volume or use Automatic Italian voice."; };
-    utterance.onstart = function () { el("voiceStatus").textContent = ""; };
-    window.speechSynthesis.speak(utterance);
+    activeUtterance = utterance;
+    utterance.onerror = function (event) {
+      if (activeUtterance !== utterance) { return; }
+      activeUtterance = null;
+      el("voiceStatus").textContent = "Speech error [" + (event.error || "unknown") + "]. Voice: " + (chosen ? chosen.name : "Automatic") + "; language: " + utterance.lang + ".";
+    };
+    utterance.onstart = function () {
+      if (activeUtterance === utterance) { el("voiceStatus").textContent = "Speaking…"; }
+    };
+    utterance.onend = function () {
+      if (activeUtterance === utterance) { activeUtterance = null; el("voiceStatus").textContent = "Finished speaking."; }
+    };
+    try {
+      synthesis.speak(utterance);
+      if (synthesis.paused) { synthesis.resume(); }
+    } catch (error) {
+      activeUtterance = null;
+      el("voiceStatus").textContent = "Speech error: " + error.message;
+    }
   }
   refreshVoiceList();
   if ("speechSynthesis" in window) {

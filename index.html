@@ -265,6 +265,7 @@
 
   var voiceSelect = el("voiceSelect");
   var allVoices = [];
+  var activeUtterance = null;
   var voiceStorageKey = "italian-tutor-voice-";
   var PREFERRED_IT = ["alice", "elsa", "luca", "isabella", "google italiano", "microsoft elsa", "microsoft cosimo", "microsoft diego", "italian"];
   var PREFERRED_EN = ["samantha", "google us english", "microsoft aria", "microsoft jenny", "alex", "daniel"];
@@ -313,8 +314,7 @@
     if (savedExists) {
       voiceSelect.value = saved;
     } else {
-      var preferredVoice = matches[0];
-      voiceSelect.value = preferredVoice ? (preferredVoice.voiceURI || preferredVoice.name) : "";
+      voiceSelect.value = "";
     }
   }
 
@@ -324,27 +324,42 @@
         return (voice.voiceURI || voice.name) === voiceSelect.value && voiceMatches(voice, prefix);
       })[0] || null;
     }
-    var matches = allVoices.filter(function (voice) { return voiceMatches(voice, prefix); });
-    matches.sort(function (a, b) { return scoreVoice(b, prefix) - scoreVoice(a, prefix); });
-    return matches[0] || null;
+    return null;
   }
 
   function speak(text, langCode, rate) {
     if (!text) { setStatus("Nothing to pronounce yet.", true); return; }
     if (!("speechSynthesis" in window)) { setStatus("Speech playback is not supported in this browser.", true); return; }
 
-    allVoices = window.speechSynthesis.getVoices() || allVoices;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.resume();
+    var synthesis = window.speechSynthesis;
+    allVoices = synthesis.getVoices() || allVoices;
+    activeUtterance = null;
+    if (synthesis.speaking || synthesis.pending) { synthesis.cancel(); }
     var utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = langCode;
     utterance.rate = rate || 1;
     utterance.pitch = 1;
     var voice = selectedVoice(langCode.slice(0, 2).toLowerCase());
     if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
-    utterance.onerror = function () { setStatus("Could not play speech. Check iPhone media volume or try Automatic Italian voice.", true); };
-    utterance.onstart = function () { setStatus(""); };
-    window.speechSynthesis.speak(utterance);
+    activeUtterance = utterance;
+    utterance.onerror = function (event) {
+      if (activeUtterance !== utterance) { return; }
+      activeUtterance = null;
+      setStatus("Speech error [" + (event.error || "unknown") + "]. Voice: " + (voice ? voice.name : "Automatic") + "; language: " + utterance.lang + ".", true);
+    };
+    utterance.onstart = function () {
+      if (activeUtterance === utterance) { setStatus("Speaking…"); }
+    };
+    utterance.onend = function () {
+      if (activeUtterance === utterance) { activeUtterance = null; setStatus("Finished speaking."); }
+    };
+    try {
+      synthesis.speak(utterance);
+      if (synthesis.paused) { synthesis.resume(); }
+    } catch (error) {
+      activeUtterance = null;
+      setStatus("Speech error: " + error.message, true);
+    }
   }
 
   if ("speechSynthesis" in window) {
