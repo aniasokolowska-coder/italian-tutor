@@ -26,8 +26,13 @@
   .card h3 { margin:16px 0 8px; font-size:.9rem; color:var(--mint); text-transform:uppercase; letter-spacing:.06em; }
   .controls { justify-content:flex-start; margin:14px 0 8px; }
   .controls input { flex:1; min-width:200px; }
-  .note { font-size:.86rem; line-height:1.5; color:var(--muted); }
-  .result { margin-top:14px; }
+   .note { font-size:.86rem; line-height:1.5; color:var(--muted); }
+   .meaning { margin-top:10px; padding:10px 12px; border-left:3px solid var(--mint); border-radius:8px; background:rgba(67,214,165,.08); }
+   .result { margin-top:14px; }
+   .grammar-table td { white-space:nowrap; }
+   .example-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px; margin-top:12px; }
+   .example { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 11px; background:#141936; border-radius:10px; }
+   .example button { flex:none; padding:5px 8px; font-size:.78rem; }
   .table-wrap { overflow-x:auto; }
   table { width:100%; border-collapse:collapse; min-width:560px; }
   th,td { border-bottom:1px solid rgba(255,255,255,.09); padding:9px 10px; text-align:left; }
@@ -70,12 +75,13 @@
 
   <section class="card">
     <h2>Verb conjugator</h2>
-    <p class="note">Enter an Italian infinitive ending in <i>-are</i>, <i>-ere</i>, or <i>-ire</i> (for example, <i>parlare</i>). Includes present, passato prossimo, imperfetto, and future. Common irregular verbs are included; unknown verbs use regular patterns.</p>
+    <p class="note">Enter an Italian infinitive ending in <i>-are</i>, <i>-ere</i>, or <i>-ire</i> (for example, <i>parlare</i>). It shows the English meaning, present, passato prossimo, imperfetto, and future. Common meanings and irregular verbs are built in; other meanings use an online lookup, and unknown verbs follow regular patterns.</p>
     <div class="controls">
       <input id="verbInput" type="text" placeholder="Italian infinitive, e.g. parlare" aria-label="Italian infinitive" />
       <button id="conjugateBtn" class="primary">Conjugate</button>
     </div>
     <div id="verbMessage" class="note" aria-live="polite"></div>
+    <div id="verbMeaning" class="meaning" aria-live="polite" hidden></div>
     <div id="verbResult" class="result"></div>
   </section>
 
@@ -94,6 +100,43 @@
     <h3>Hundreds and thousands</h3>
     <div class="note">100 <b>cento</b> · 200 <b>duecento</b> · 1,000 <b>mille</b> · 2,000 <b>duemila</b> · 1,000,000 <b>un milione</b></div>
     <p class="note">Spelling tips: <i>venti + uno → ventuno</i> (drop the final vowel); <i>venti + otto → ventotto</i> (double the final consonant); numbers ending in 3 take an accent: <i>ventitré</i>.</p>
+  </section>
+
+  <section class="card" id="grammarCheat">
+    <h2>Articulated prepositions</h2>
+    <p class="note">These forms combine <i>di, a, da, in, su</i> with a definite article. Tap an Italian form to hear it.</p>
+    <div class="table-wrap">
+      <table class="grammar-table">
+        <thead><tr><th>Preposition</th><th>il</th><th>lo</th><th>la</th><th>l’</th><th>i</th><th>gli</th><th>le</th></tr></thead>
+        <tbody>
+          <tr><th>di</th><td>del</td><td>dello</td><td>della</td><td>dell’</td><td>dei</td><td>degli</td><td>delle</td></tr>
+          <tr><th>a</th><td>al</td><td>allo</td><td>alla</td><td>all’</td><td>ai</td><td>agli</td><td>alle</td></tr>
+          <tr><th>da</th><td>dal</td><td>dallo</td><td>dalla</td><td>dall’</td><td>dai</td><td>dagli</td><td>dalle</td></tr>
+          <tr><th>in</th><td>nel</td><td>nello</td><td>nella</td><td>nell’</td><td>nei</td><td>negli</td><td>nelle</td></tr>
+          <tr><th>su</th><td>sul</td><td>sullo</td><td>sulla</td><td>sull’</td><td>sui</td><td>sugli</td><td>sulle</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Examples: <i>il libro sul tavolo</i> (the book on the table); <i>vado al cinema</i> (I’m going to the cinema); <i>la casa della nonna</i> (grandma’s house). <i>Per, tra, fra</i> do not combine with articles. <i>Con</i> is usually separate (<i>con il</i>); <i>col</i> and <i>coi</i> are also used.</p>
+
+    <h2>Partitive article: “some” or “any”</h2>
+    <p class="note">The partitive article uses <i>di + definite article</i> to mean an unspecified amount or number. Its forms are the same as the <i>di</i> row above.</p>
+    <div class="example-list">
+      <div class="example"><span><b>del pane</b> — some bread</span><button type="button" data-say="del pane">🔊</button></div>
+      <div class="example"><span><b>dello zucchero</b> — some sugar</span><button type="button" data-say="dello zucchero">🔊</button></div>
+      <div class="example"><span><b>della pasta</b> — some pasta</span><button type="button" data-say="della pasta">🔊</button></div>
+      <div class="example"><span><b>dell’acqua</b> — some water</span><button type="button" data-say="dell’acqua">🔊</button></div>
+      <div class="example"><span><b>dei libri</b> — some books</span><button type="button" data-say="dei libri">🔊</button></div>
+      <div class="example"><span><b>degli amici</b> — some friends</span><button type="button" data-say="degli amici">🔊</button></div>
+      <div class="example"><span><b>delle mele</b> — some apples</span><button type="button" data-say="delle mele">🔊</button></div>
+    </div>
+    <h3>Use it in a sentence</h3>
+    <div class="example-list">
+      <div class="example"><span><b>Vorrei del pane.</b> — I’d like some bread.</span><button type="button" data-say="Vorrei del pane.">🔊</button></div>
+      <div class="example"><span><b>Compro degli aranci.</b> — I’m buying some oranges.</span><button type="button" data-say="Compro degli aranci.">🔊</button></div>
+      <div class="example"><span><b>Bevo dell’acqua.</b> — I’m drinking some water.</span><button type="button" data-say="Bevo dell’acqua.">🔊</button></div>
+    </div>
+    <p class="note">Use <i>del/dello/della/dell’</i> with singular, uncountable nouns; use <i>dei/degli/delle</i> with plural count nouns. The partitive is often omitted in negative sentences: <i>Non ho pane</i> (I don’t have any bread).</p>
   </section>
   <footer>Conjugation includes common forms and regular patterns. A few verbs have multiple acceptable uses or auxiliary choices.</footer>
 </div>
@@ -151,6 +194,26 @@
   var verbInput = el("verbInput");
   var verbResult = el("verbResult");
   var verbMessage = el("verbMessage");
+  var verbMeaning = el("verbMeaning");
+  var meaningRequest = 0;
+  var verbMeanings = {
+    essere:"to be", avere:"to have", andare:"to go", fare:"to do; to make", dire:"to say; to tell", venire:"to come", parlare:"to speak; to talk",
+    potere:"can; to be able to", volere:"to want", dovere:"must; to have to", sapere:"to know (a fact; how to)",
+    stare:"to stay; to be", uscire:"to go out; to exit", bere:"to drink", dare:"to give", rimanere:"to remain; to stay",
+    prendere:"to take; to have", vedere:"to see", mettere:"to put; to place", leggere:"to read", scrivere:"to write",
+    aprire:"to open", chiudere:"to close", chiedere:"to ask; to request", rispondere:"to answer; to reply", vivere:"to live",
+    nascere:"to be born", morire:"to die", correre:"to run", scegliere:"to choose", perdere:"to lose",
+    capire:"to understand", finire:"to finish", preferire:"to prefer", pulire:"to clean", lavorare:"to work",
+    studiare:"to study", mangiare:"to eat", dormire:"to sleep", comprare:"to buy", vendere:"to sell", partire:"to leave; to depart",
+    arrivare:"to arrive", tornare:"to return; to come back", entrare:"to enter", lasciare:"to leave; to let", cercare:"to look for; to search",
+    pagare:"to pay", giocare:"to play", amare:"to love", piacere:"to please; to like", chiamarsi:"to be called",
+    svegliarsi:"to wake up", lavarsi:"to wash oneself", vestirsi:"to get dressed", sentirsi:"to feel", divertirsi:"to have fun",
+    insegnare:"to teach", imparare:"to learn", costruire:"to build", offrire:"to offer", aspettare:"to wait", portare:"to carry; to bring",
+    usare:"to use", guardare:"to watch; to look at", ascoltare:"to listen", trovare:"to find", pensare:"to think", credere:"to believe",
+    conoscere:"to know (a person or place)", ricordare:"to remember", dimenticare:"to forget", telefonare:"to phone; to call",
+    raccontare:"to tell; to recount", spiegare:"to explain", aiutare:"to help", viaggiare:"to travel", cantare:"to sing",
+    ballare:"to dance", abitare:"to live; to reside", sembrare:"to seem", succedere:"to happen", controllare:"to check; to control"
+  };
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, function (c) {
@@ -259,14 +322,46 @@
     return "<div class='tense'><h3>" + title + "</h3>" + body + "</div>";
   }
 
+  function translateVerb(verb) {
+    var requestId = ++meaningRequest;
+    verbMeaning.hidden = false;
+    verbMeaning.textContent = "English meaning: looking up…";
+    if (verbMeanings[verb]) {
+      verbMeaning.textContent = "English meaning: " + verbMeanings[verb];
+      return;
+    }
+    var url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(verb) + "&langpair=it|en";
+    fetch(url)
+      .then(function (response) {
+        if (!response.ok) { throw new Error("Translation lookup unavailable."); }
+        return response.json();
+      })
+      .then(function (data) {
+        if (requestId !== meaningRequest) { return; }
+        var translated = data && data.responseData && data.responseData.translatedText;
+        if (!translated || translated.toLowerCase() === verb.toLowerCase()) {
+          verbMeaning.textContent = "English meaning: no translation found. Check the spelling or try the infinitive form.";
+          return;
+        }
+        verbMeaning.textContent = "English meaning: " + translated;
+      })
+      .catch(function () {
+        if (requestId === meaningRequest) {
+          verbMeaning.textContent = "English meaning: lookup unavailable right now. Conjugations are still shown.";
+        }
+      });
+  }
+
   function conjugate() {
     var forms = getForms(verbInput.value);
     if (forms.error) {
       verbMessage.textContent = forms.error;
       verbMessage.className = "note error";
+      verbMeaning.hidden = true;
       verbResult.innerHTML = "";
       return;
     }
+    translateVerb(forms.verb);
     verbMessage.textContent = "Infinitive: " + forms.verb + " · Passato prossimo auxiliary: " + forms.auxiliary;
     verbMessage.className = "note";
     var cards = [
@@ -415,6 +510,10 @@
   });
   el("testVoice").addEventListener("click", function () { speak("Ciao! Questa è una prova della pronuncia italiana."); });
   verbResult.addEventListener("click", function (event) {
+    var button = event.target.closest("button[data-say]");
+    if (button) { speak(button.getAttribute("data-say")); }
+  });
+  el("grammarCheat").addEventListener("click", function (event) {
     var button = event.target.closest("button[data-say]");
     if (button) { speak(button.getAttribute("data-say")); }
   });

@@ -4,7 +4,7 @@ Beginner-friendly tools in one place:
 
 1. **English ⇄ Italian Translator** (`index.html`) — a self-contained web app that translates spoken or written English to Italian and Italian to English, with selectable English and Italian speech voices.
 2. **Interactive Lesson Plan** (`lessons.html` + `lessons-data.js`) — three 8-week courses (Beginner A1, Intermediate B1, Advanced C1) as clickable weekly tabs. Every week includes a listenable dialogue, vocabulary with translations, grammar, and dedicated **speaking**, **writing**, and **describing** practice, plus exercises you can answer by typing or speaking. Progress and answers are saved in your browser.
-3. **Verb & Number Cheat Sheets** (`cheatsheet.html`) — conjugate Italian infinitives in the present, passato prossimo, imperfetto, and future, plus a spoken number converter and number reference.
+3. **Italian Cheat Sheets** (`cheatsheet.html`) — conjugate Italian infinitives in the present, passato prossimo, imperfetto, and future with English meanings; reference articulated prepositions and the partitive article; and use the spoken number converter.
 
 ### Checking your speaking & writing
 
